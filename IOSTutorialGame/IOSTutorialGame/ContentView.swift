@@ -1,62 +1,153 @@
-//
-//  ContentView.swift
-//  IOSTutorialGame
-//
-//  Created by student2 on 2026-06-06.
-//
-
 import SwiftUI
+import Combine
 
 struct ContentView: View {
+    
+    @State private var score = 0
+    @State private var timeLeft = 10
+    @State private var gameActive = false
+    @State private var gameOver = false
+    @State private var highScore = 0
+    @State private var isPressed = false
+    
+    let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            VStack(spacing: 30) {
-                Text("TAP FRENZY")
-                    .font(.system(size: 28, weight: .black))
-                    .foregroundColor(.white)
-                
-                HStack(spacing: 60) {
-                    VStack(spacing: 4) {
-                        Text("0")
-                            .font(.system(size: 52, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                        Text("SCORE")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .tracking(2)
-                    }
-                    VStack(spacing: 4) {
-                        Text("10")
-                            .font(.system(size: 52, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                        Text("TIME")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .tracking(2)
-                    }
+            if gameOver {
+                gameOverView
+            } else {
+                gameView
+            }
+        }
+        .onReceive(countdownTimer) { _ in
+            guard gameActive else { return }
+            if timeLeft > 0 {
+                timeLeft -= 1
+            } else {
+                endGame()
+            }
+        }
+    }
+    
+    var gameView: some View {
+        VStack(spacing: 30) {
+            Text("TAP FRENZY")
+                .font(.system(size: 28, weight: .black))
+                .foregroundColor(.white)
+            
+            HStack(spacing: 60) {
+                VStack(spacing: 4) {
+                    Text("\(score)")
+                        .font(.system(size: 52, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
+                    Text("SCORE")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .tracking(2)
                 }
-                
-                Spacer()
-                
+                VStack(spacing: 4) {
+                    Text("\(timeLeft)")
+                        .font(.system(size: 52, weight: .bold, design: .monospaced))
+                        .foregroundColor(timeLeft <= 3 ? .red : .white)
+                    Text("TIME")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .tracking(2)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: handleTap) {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 200, height: 200)
+                    .scaleEffect(isPressed ? 0.9 : 1.0)
+                    .animation(.spring(response: 0.15, dampingFraction: 0.5), value: isPressed)
                     .overlay(
-                        Text("START")
+                        Text(gameActive ? "TAP!" : "START")
                             .font(.system(size: 30, weight: .black))
                             .foregroundColor(.black)
                     )
-                
-                Spacer()
-                
-                Text("Best: 0")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
             }
-            .padding()
+            .buttonStyle(.plain)
+            
+            Spacer()
+            
+            Text("Best: \(highScore)")
+                .font(.footnote)
+                .foregroundColor(.gray)
         }
+        .padding()
+    }
+    
+    var gameOverView: some View {
+        VStack(spacing: 24) {
+            Text("GAME OVER")
+                .font(.system(size: 32, weight: .black))
+                .foregroundColor(.white)
+            
+            VStack(spacing: 8) {
+                Text("\(score)")
+                    .font(.system(size: 72, weight: .black, design: .monospaced))
+                    .foregroundColor(.white)
+                Text("TAPS")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .tracking(4)
+            }
+            
+            Text("Best: \(highScore)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+            
+            Button("PLAY AGAIN") {
+                resetGame()
+            }
+            .font(.system(size: 18, weight: .bold))
+            .foregroundColor(.black)
+            .frame(width: 160, height: 50)
+            .background(Color.white)
+            .cornerRadius(12)
+        }
+        .padding()
+    }
+    
+    func handleTap() {
+        if !gameActive {
+            startGame()
+            return
+        }
+        score += 1
+        isPressed = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isPressed = false
+        }
+    }
+    
+    func startGame() {
+        score = 0
+        timeLeft = 10
+        gameOver = false
+        gameActive = true
+    }
+    
+    func endGame() {
+        gameActive = false
+        gameOver = true
+        if score > highScore {
+            highScore = score
+        }
+    }
+    
+    func resetGame() {
+        score = 0
+        timeLeft = 10
+        gameOver = false
+        gameActive = false
     }
 }
 
