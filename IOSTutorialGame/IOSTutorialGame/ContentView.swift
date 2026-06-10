@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var isPressed = false
     @State private var comboMultiplier = 1
     @State private var lastTapTime: Date? = nil
+    @State private var isGreenMode = false
+    @State private var trapTimer: Timer? = nil
     
     
     let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -72,7 +74,7 @@ struct ContentView: View {
             
             Button(action: handleTap) {
                 Circle()
-                    .fill(Color.white)
+                    .fill(isGreenMode ? Color.green : Color.white)
                     .frame(width: 200, height: 200)
                     .scaleEffect(isPressed ? 0.9 : 1.0)
                     .animation(.spring(response: 0.15, dampingFraction: 0.5), value: isPressed)
@@ -103,10 +105,16 @@ struct ContentView: View {
                 Text("\(score)")
                     .font(.system(size: 72, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
-                Text("TAPS")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .tracking(4)
+                VStack(spacing: 6) {
+                    Text(gameActive ? "TAP!" : "START")
+                        .font(.system(size: 30, weight: .black))
+                        .foregroundColor(.black)
+                    if gameActive {
+                        Text(isGreenMode ? "+2 BONUS" : "")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.black.opacity(0.7))
+                    }
+                }
             }
             
             Text("Best: \(highScore)")
@@ -137,7 +145,8 @@ struct ContentView: View {
             comboMultiplier = 1
         }
         lastTapTime = now
-        score += comboMultiplier
+        let points = isGreenMode ? 2 : 1
+        score += points * comboMultiplier
         isPressed = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             isPressed = false
@@ -151,6 +160,7 @@ struct ContentView: View {
         gameActive = true
         comboMultiplier = 1
         lastTapTime = nil
+        startTrapTimer()
     }
     
     func endGame() {
@@ -159,6 +169,7 @@ struct ContentView: View {
         if score > highScore {
             highScore = score
         }
+        trapTimer?.invalidate()
     }
     
     func resetGame() {
@@ -166,6 +177,16 @@ struct ContentView: View {
         timeLeft = 10
         gameOver = false
         gameActive = false
+        isGreenMode = false
+    }
+    
+    func startTrapTimer() {
+        trapTimer?.invalidate()
+        trapTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            withAnimation(.easeInOut(duration: 0.4)) {
+                self.isGreenMode = Bool.random()
+            }
+        }
     }
 }
 
