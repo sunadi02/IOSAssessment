@@ -9,6 +9,9 @@ struct ContentView: View {
     @State private var gameOver = false
     @State private var highScore = 0
     @State private var isPressed = false
+    @State private var comboMultiplier = 1
+    @State private var lastTapTime: Date? = nil
+    
     
     let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -57,6 +60,12 @@ struct ContentView: View {
                         .foregroundColor(.gray)
                         .tracking(2)
                 }
+            }
+            if comboMultiplier > 1 {
+                Text("COMBO x\(comboMultiplier)!")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.yellow)
+                    .transition(.scale.combined(with: .opacity))
             }
             
             Spacer()
@@ -121,7 +130,14 @@ struct ContentView: View {
             startGame()
             return
         }
-        score += 1
+        let now = Date()
+        if let last = lastTapTime, now.timeIntervalSince(last) < 0.5 {
+            comboMultiplier = min(comboMultiplier + 1, 5)
+        } else {
+            comboMultiplier = 1
+        }
+        lastTapTime = now
+        score += comboMultiplier
         isPressed = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             isPressed = false
@@ -133,6 +149,8 @@ struct ContentView: View {
         timeLeft = 10
         gameOver = false
         gameActive = true
+        comboMultiplier = 1
+        lastTapTime = nil
     }
     
     func endGame() {
