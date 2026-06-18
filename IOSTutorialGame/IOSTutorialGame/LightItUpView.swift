@@ -26,7 +26,7 @@ struct LightItUpView: View {
     
     @State private var cards: [Card] = []
     @State private var score = 0
-    @State private var lives = 3
+    @State private var lives = 5
     @State private var timeLeft = 60
     @State private var gameActive = false
     @State private var gameOver = false
@@ -91,7 +91,7 @@ struct LightItUpView: View {
             .padding(.horizontal)
             
             HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { i in
+                ForEach(0..<5, id: \.self) { i in
                     Image(systemName: i < lives ? "heart.fill" : "heart")
                         .foregroundColor(i < lives ? .red : .gray)
                         .font(.system(size: 20))
@@ -186,7 +186,7 @@ struct LightItUpView: View {
     }
     
     func startGame() {
-        score = 0; lives = 3; timeLeft = 60
+        score = 0; lives = 5; timeLeft = 60
         currentLevel = .l1; gameOver = false; gameActive = true
         buildCards()
         startLitTimer()
@@ -199,7 +199,7 @@ struct LightItUpView: View {
     }
     
     func resetGame() {
-        score = 0; lives = 3; timeLeft = 60
+        score = 0; lives = 5; timeLeft = 60
         currentLevel = .l1; gameOver = false; gameActive = false
         cards = []
     }
