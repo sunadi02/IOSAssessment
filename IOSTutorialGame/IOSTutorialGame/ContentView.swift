@@ -22,10 +22,18 @@ struct ContentView: View {
                     
                     VStack(spacing: 16) {
                         NavigationLink(destination: TapFrenzyView()) {
-                            ModeButton(title: "TAP FRENZY", desc: "tap the button as fast as you can", icon: "hand.tap.fill")
+                            ModeButton(title: "TAP FRENZY", desc: "tap the button as fast as you can", icon: "hand.tap.fill", accent: Color.green)
                         }
                         NavigationLink(destination: LightItUpView()) {
-                            ModeButton(title: "LIGHT IT UP", desc: "hit the glowing card before it fades", icon: "lightbulb.fill")
+                            ModeButton(title: "LIGHT IT UP", desc: "hit the glowing card before it fades", icon: "lightbulb.fill", accent: Color.blue)
+                        }
+                        NavigationLink(destination: InfiniteView()) {
+                            ModeButton(
+                                title: "Infinite",
+                                desc: "no timer - survive as long as you can",
+                                icon: "infinity",
+                                accent: .orange
+                            )
                         }
                     }
                     .padding(.horizontal, 24)
@@ -43,6 +51,7 @@ struct ModeButton: View {
     let title: String
     let desc: String
     let icon: String
+    let accent: Color
     
     var body: some View {
         HStack(spacing: 16) {
@@ -50,7 +59,7 @@ struct ModeButton: View {
                 .font(.system(size: 22))
                 .foregroundColor(.black)
                 .frame(width: 48, height: 48)
-                .background(Color.white)
+                .background(accent)
                 .cornerRadius(12)
             
             VStack(alignment: .leading, spacing: 3) {

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 enum Level: Int, CaseIterable {
     case l1 = 1, l2, l3, l4
