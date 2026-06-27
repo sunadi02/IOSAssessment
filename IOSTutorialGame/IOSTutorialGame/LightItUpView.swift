@@ -5,19 +5,44 @@ enum Level: Int, CaseIterable {
     case l1 = 1, l2, l3, l4
     
     var cardCount: Int {
-        switch self { case .l1: return 3; case .l2: return 4; case .l3: return 6; case .l4: return 9 }
+        switch self {
+        case .l1: return 3
+        case .l2: return 4
+        case .l3: return 6
+        case .l4: return 9
+        }
     }
-    var columns: Int {
-        switch self { case .l1: return 3; case .l2: return 2; case .l3: return 3; case .l4: return 3 }
+    
+    var cols: Int {
+        switch self {
+        case .l1: return 3
+        case .l2: return 2
+        case .l3: return 3
+        case .l4: return 3
+        }
     }
-    var litWindow: Double {
-        switch self { case .l1: return 1.5; case .l2: return 1.2; case .l3: return 1.0; case .l4: return 0.8 }
+    
+    var window: Double {
+        switch self {
+        case .l1: return 1.5
+        case .l2: return 1.2
+        case .l3: return 1.0
+        case .l4: return 0.8
+        }
     }
+    
     var litCount: Int { self == .l4 ? 2 : 1 }
-    var glowColor: Color {
-        switch self { case .l1: return .blue; case .l2: return .green; case .l3: return .orange; case .l4: return .red }
+    
+    var colour: Color {
+        switch self {
+        case .l1: return .blue
+        case .l2: return .green
+        case .l3: return .orange
+        case .l4: return .red
+        }
     }
-    var label: String { "LEVEL \(rawValue)" }
+    
+    var name: String { "LEVEL \(rawValue)" }
 }
 
 struct LightItUpView: View {
@@ -30,215 +55,240 @@ struct LightItUpView: View {
     @State private var timeLeft = 60
     @State private var gameActive = false
     @State private var gameOver = false
-    @State private var currentLevel: Level = .l1
-    @State private var showLevelFlash = false
+    @State private var level: Level = .l1
+    @State private var showFlash = false
     @State private var litTimer: Timer? = nil
     
-    let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
             if gameOver {
-                gameOverView
+                endScreen
             } else {
-                gameView
+                mainView
             }
             
-            if showLevelFlash {
-                levelFlashOverlay
+            if showFlash {
+                flashOverlay
             }
         }
-        .onReceive(countdownTimer) { _ in
+        .onReceive(ticker) { _ in
             guard gameActive else { return }
             if timeLeft > 0 {
                 timeLeft -= 1
-                updateLevel()
+                checkLevelUp()
             } else {
-                endGame()
+                finish()
             }
         }
         .navigationTitle("Light It Up")
         .navigationBarTitleDisplayMode(.inline)
     }
     
-    var gameView: some View {
-        VStack(spacing: 20) {
-            
+    var mainView: some View {
+        VStack(spacing: 16) {
             HStack {
                 VStack(spacing: 2) {
                     Text("\(score)")
-                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
                         .foregroundColor(.white)
-                    Text("SCORE").font(.caption).foregroundColor(.gray).tracking(2)
+                    Text("SCORE")
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                        .tracking(2)
                 }
+                
                 Spacer()
-                VStack(spacing: 2) {
-                    Text(currentLevel.label)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(currentLevel.glowColor)
-                    Text("").font(.caption).foregroundColor(.clear)
-                }
+                
+                Text(level.name)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(level.colour)
+                
                 Spacer()
+                
                 VStack(spacing: 2) {
                     Text("\(timeLeft)")
-                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
                         .foregroundColor(timeLeft <= 10 ? .red : .white)
-                    Text("TIME").font(.caption).foregroundColor(.gray).tracking(2)
+                    Text("TIME")
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                        .tracking(2)
                 }
             }
             .padding(.horizontal)
             
-            HStack(spacing: 8) {
+            // lives
+            HStack(spacing: 6) {
                 ForEach(0..<5, id: \.self) { i in
                     Image(systemName: i < lives ? "heart.fill" : "heart")
-                        .foregroundColor(i < lives ? .red : .gray)
-                        .font(.system(size: 20))
+                        .foregroundColor(i < lives ? .red : Color(white: 0.3))
+                        .font(.system(size: 18))
                 }
             }
             
             Spacer()
             
-            if !gameActive && !gameOver {
-                Button("START") { startGame() }
-                    .font(.system(size: 24, weight: .black))
+            if !gameActive {
+                Button("START") { beginGame() }
+                    .font(.system(size: 22, weight: .black))
                     .foregroundColor(.black)
-                    .frame(width: 160, height: 60)
+                    .frame(width: 150, height: 56)
                     .background(Color.white)
-                    .cornerRadius(14)
+                    .cornerRadius(12)
             } else {
-                let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: currentLevel.columns)
-                
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(cards) { card in
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(card.isLit ? currentLevel.glowColor : Color(white: 0.15))
-                            .frame(height: 90)
-                            .scaleEffect(card.isLit ? 1.05 : 1.0)
-                            .shadow(color: card.isLit ? currentLevel.glowColor.opacity(0.7) : .clear, radius: 12)
-                            .animation(.easeInOut(duration: 0.2), value: card.isLit)
-                            .onTapGesture { handleCardTap(card) }
-                    }
-                }
-                .padding(.horizontal)
+                cardGrid
             }
             
             Spacer()
             
-            Text("Best: \(highScore)")
-                .font(.footnote).foregroundColor(.gray)
+            Text("best: \(highScore)")
+                .font(.footnote)
+                .foregroundColor(Color(white: 0.35))
         }
-        .padding(.top)
+        .padding(.top, 8)
     }
     
-    var gameOverView: some View {
-        VStack(spacing: 24) {
+    var cardGrid: some View {
+        let gridCols = Array(repeating: GridItem(.flexible(), spacing: 10), count: level.cols)
+        return LazyVGrid(columns: gridCols, spacing: 10) {
+            ForEach(cards) { card in
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(card.isLit ? level.colour : Color(white: 0.13))
+                    .frame(height: 88)
+                    .scaleEffect(card.isLit ? 1.04 : 1.0)
+                    .shadow(color: card.isLit ? level.colour.opacity(0.6) : .clear, radius: 10)
+                    .animation(.easeOut(duration: 0.15), value: card.isLit)
+                    .onTapGesture { tapped(card) }
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    var endScreen: some View {
+        VStack(spacing: 20) {
             Text("GAME OVER")
-                .font(.system(size: 32, weight: .black)).foregroundColor(.white)
+                .font(.system(size: 30, weight: .black))
+                .foregroundColor(.white)
             
-            if score >= highScore && score > 0 {
-                Text("🏆 NEW HIGH SCORE!")
-                    .font(.system(size: 16, weight: .bold)).foregroundColor(.yellow)
+            if score > 0 && score >= highScore {
+                Text("🏆 new high score!")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.yellow)
             }
             
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Text("\(score)")
-                    .font(.system(size: 72, weight: .black, design: .monospaced))
+                    .font(.system(size: 80, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
-                Text("POINTS")
-                    .font(.caption).foregroundColor(.gray).tracking(4)
+                Text("points")
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
             
-            Text("Best: \(highScore)")
-                .font(.subheadline).foregroundColor(.gray)
+            Text("best: \(highScore)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
             
-            Button("PLAY AGAIN") { resetGame() }
-                .font(.system(size: 18, weight: .bold))
+            Button("play again") { restartGame() }
+                .font(.system(size: 17, weight: .bold))
                 .foregroundColor(.black)
-                .frame(width: 160, height: 50)
+                .frame(width: 150, height: 48)
                 .background(Color.white)
-                .cornerRadius(12)
+                .cornerRadius(10)
+                .padding(.top, 8)
         }
         .padding()
     }
     
-    var levelFlashOverlay: some View {
-        Text(currentLevel.label)
-            .font(.system(size: 40, weight: .black))
-            .foregroundColor(currentLevel.glowColor)
-            .padding(30)
-            .background(Color.black.opacity(0.85))
-            .cornerRadius(20)
+    var flashOverlay: some View {
+        Text(level.name)
+            .font(.system(size: 38, weight: .black))
+            .foregroundColor(level.colour)
+            .padding(28)
+            .background(Color.black.opacity(0.88))
+            .cornerRadius(18)
             .transition(.opacity)
     }
     
-    func handleCardTap(_ card: Card) {
-        guard gameActive, let index = cards.firstIndex(where: { $0.id == card.id }) else { return }
+    func tapped(_ card: Card) {
+        guard gameActive,
+              let i = cards.firstIndex(where: { $0.id == card.id }) else { return }
         
-        if cards[index].isLit {
+        if cards[i].isLit {
             score += 1
-            withAnimation { cards[index].isLit = false }
+            withAnimation { cards[i].isLit = false }
         } else {
             lives -= 1
-            if lives <= 0 { endGame() }
+            if lives <= 0 { finish() }
         }
     }
     
-    func startGame() {
-        score = 0; lives = 5; timeLeft = 60
-        currentLevel = .l1; gameOver = false; gameActive = true
-        buildCards()
-        startLitTimer()
+    func beginGame() {
+        score = 0
+        lives = 5
+        timeLeft = 60
+        level = .l1
+        gameOver = false
+        gameActive = true
+        rebuildCards()
+        scheduleLitTimer()
     }
     
-    func endGame() {
-        gameActive = false; gameOver = true
+    func finish() {
+        gameActive = false
+        gameOver = true
         litTimer?.invalidate()
         if score > highScore { highScore = score }
     }
     
-    func resetGame() {
-        score = 0; lives = 5; timeLeft = 60
-        currentLevel = .l1; gameOver = false; gameActive = false
+    func restartGame() {
+        score = 0
+        lives = 5
+        timeLeft = 60
+        level = .l1
+        gameOver = false
+        gameActive = false
         cards = []
     }
     
-    func buildCards() {
-        cards = (0..<currentLevel.cardCount).map { Card(id: $0) }
+    func rebuildCards() {
+        cards = (0..<level.cardCount).map { Card(id: $0) }
     }
     
-    func updateLevel() {
+    func checkLevelUp() {
         let elapsed = 60 - timeLeft
-        let newLevel: Level
-        if elapsed < 15 { newLevel = .l1 }
-        else if elapsed < 30 { newLevel = .l2 }
-        else if elapsed < 45 { newLevel = .l3 }
-        else { newLevel = .l4 }
+        let next: Level
+        if elapsed < 15 { next = .l1 }
+        else if elapsed < 30 { next = .l2 }
+        else if elapsed < 45 { next = .l3 }
+        else { next = .l4 }
         
-        if newLevel != currentLevel {
-            currentLevel = newLevel
-            buildCards()
-            startLitTimer()
-            flashLevel()
-        }
+        guard next != level else { return }
+        level = next
+        rebuildCards()
+        scheduleLitTimer()
+        showLevelFlash()
     }
     
-    func flashLevel() {
-        withAnimation { showLevelFlash = true }
+    func showLevelFlash() {
+        withAnimation { showFlash = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            withAnimation { showLevelFlash = false }
+            withAnimation { showFlash = false }
         }
     }
     
-    func startLitTimer() {
+    func scheduleLitTimer() {
         litTimer?.invalidate()
-        litTimer = Timer.scheduledTimer(withTimeInterval: currentLevel.litWindow, repeats: true) { _ in
+        litTimer = Timer.scheduledTimer(withTimeInterval: level.window, repeats: true) { _ in
             withAnimation {
                 for i in cards.indices { cards[i].isLit = false }
-                var indices = Array(0..<cards.count).shuffled()
-                for _ in 0..<currentLevel.litCount {
-                    if !indices.isEmpty { cards[indices.removeFirst()].isLit = true }
+                var pool = Array(0..<cards.count).shuffled()
+                for _ in 0..<level.litCount {
+                    if !pool.isEmpty { cards[pool.removeFirst()].isLit = true }
                 }
             }
         }

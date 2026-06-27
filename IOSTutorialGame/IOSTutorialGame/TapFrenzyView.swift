@@ -9,151 +9,187 @@ struct TapFrenzyView: View {
     @State private var timeLeft = 10
     @State private var gameActive = false
     @State private var gameOver = false
-    @State private var isPressed = false
-    @State private var comboMultiplier = 1
-    @State private var lastTapTime: Date? = nil
-    @State private var isGreenMode = false
-    @State private var trapTimer: Timer? = nil
+    @State private var btnPressed = false
+    @State private var combo = 1
+    @State private var lastTap: Date? = nil
+    @State private var greenMode = false
+    @State private var colourTimer: Timer? = nil
     
-    let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             if gameOver {
-                gameOverView
+                endScreen
             } else {
-                gameView
+                mainView
             }
         }
-        .onReceive(countdownTimer) { _ in
+        .onReceive(ticker) { _ in
             guard gameActive else { return }
-            if timeLeft > 0 {
-                timeLeft -= 1
-            } else {
-                endGame()
-            }
+            timeLeft -= 1
+            if timeLeft <= 0 { finish() }
         }
         .navigationTitle("Tap Frenzy")
         .navigationBarTitleDisplayMode(.inline)
     }
     
-    var gameView: some View {
-        VStack(spacing: 30) {
-            HStack(spacing: 60) {
-                VStack(spacing: 4) {
-                    Text("\(score)")
-                        .font(.system(size: 52, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
-                    Text("SCORE")
-                        .font(.caption).foregroundColor(.gray).tracking(2)
-                }
-                VStack(spacing: 4) {
-                    Text("\(timeLeft)")
-                        .font(.system(size: 52, weight: .bold, design: .monospaced))
-                        .foregroundColor(timeLeft <= 3 ? .red : .white)
-                    Text("TIME")
-                        .font(.caption).foregroundColor(.gray).tracking(2)
-                }
+    var mainView: some View {
+        VStack(spacing: 28) {
+            HStack(spacing: 52) {
+                statBlock(value: "\(score)", label: "SCORE")
+                statBlock(value: "\(timeLeft)", label: "TIME", highlight: timeLeft <= 3)
             }
             
-            if comboMultiplier > 1 {
-                Text("COMBO x\(comboMultiplier)!")
-                    .font(.system(size: 18, weight: .bold))
+            // combo indicator
+            if combo > 1 {
+                Text("x\(combo) COMBO")
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.yellow)
-                    .transition(.scale.combined(with: .opacity))
+            } else {
+                Text(" ") // keeps layout stable
+                    .font(.system(size: 16))
             }
             
             Spacer()
             
-            Button(action: handleTap) {
+            Button(action: onTap) {
                 Circle()
-                    .fill(isGreenMode ? Color.green : Color.white)
-                    .frame(width: 200, height: 200)
-                    .scaleEffect(isPressed ? 0.9 : 1.0)
-                    .animation(.spring(response: 0.15, dampingFraction: 0.5), value: isPressed)
+                    .fill(greenMode ? Color.green : Color.white)
+                    .frame(width: 210, height: 210)
+                    .scaleEffect(btnPressed ? 0.88 : 1.0)
+                    .animation(.spring(response: 0.15, dampingFraction: 0.5), value: btnPressed)
                     .overlay(
                         Text(gameActive ? "TAP!" : "START")
-                            .font(.system(size: 30, weight: .black))
+                            .font(.system(size: 28, weight: .black))
                             .foregroundColor(.black)
                     )
             }
             .buttonStyle(.plain)
             
+            if gameActive {
+                Text(greenMode ? "GREEN = DOUBLE POINTS" : "")
+                    .font(.system(size: 11))
+                    .foregroundColor(.green)
+                    .frame(height: 16)
+            }
+            
             Spacer()
             
-            Text("Best: \(highScore)")
-                .font(.footnote).foregroundColor(.gray)
+            Text("best: \(highScore)")
+                .font(.footnote)
+                .foregroundColor(Color(white: 0.35))
         }
         .padding()
     }
     
-    var gameOverView: some View {
-        VStack(spacing: 24) {
-            Text("GAME OVER")
-                .font(.system(size: 32, weight: .black)).foregroundColor(.white)
+    var endScreen: some View {
+        VStack(spacing: 20) {
+            Text("TIME'S UP")
+                .font(.system(size: 30, weight: .black))
+                .foregroundColor(.white)
             
-            if score >= highScore && score > 0 {
-                Text("🏆 NEW HIGH SCORE!")
-                    .font(.system(size: 16, weight: .bold)).foregroundColor(.yellow)
+            if score > 0 && score >= highScore {
+                Text("🏆 new high score!")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.yellow)
             }
             
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Text("\(score)")
-                    .font(.system(size: 72, weight: .black, design: .monospaced))
+                    .font(.system(size: 80, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
-                Text("TAPS")
-                    .font(.caption).foregroundColor(.gray).tracking(4)
+                Text("taps")
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
             
-            Text("Best: \(highScore)")
-                .font(.subheadline).foregroundColor(.gray)
+            Text("best: \(highScore)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
             
-            Button("PLAY AGAIN") { resetGame() }
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.black)
-                .frame(width: 160, height: 50)
-                .background(Color.white)
-                .cornerRadius(12)
+            Button("play again") {
+                restartGame()
+            }
+            .font(.system(size: 17, weight: .bold))
+            .foregroundColor(.black)
+            .frame(width: 150, height: 48)
+            .background(Color.white)
+            .cornerRadius(10)
+            .padding(.top, 8)
         }
         .padding()
     }
     
-    func handleTap() {
-        if !gameActive { startGame(); return }
-        let now = Date()
-        if let last = lastTapTime, now.timeIntervalSince(last) < 0.5 {
-            comboMultiplier = min(comboMultiplier + 1, 5)
-        } else {
-            comboMultiplier = 1
+    func statBlock(value: String, label: String, highlight: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 50, weight: .bold, design: .monospaced))
+                .foregroundColor(highlight ? .red : .white)
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.gray)
+                .tracking(2)
         }
-        lastTapTime = now
-        let points = isGreenMode ? 2 : 1
-        score += points * comboMultiplier
-        isPressed = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { isPressed = false }
     }
     
-    func startGame() {
-        score = 0; timeLeft = 10; gameOver = false; gameActive = true
-        comboMultiplier = 1; lastTapTime = nil
-        startTrapTimer()
+    func onTap() {
+        if !gameActive {
+            beginGame()
+            return
+        }
+        
+        let now = Date()
+        if let prev = lastTap, now.timeIntervalSince(prev) < 0.5 {
+            combo = min(combo + 1, 5)
+        } else {
+            combo = 1
+        }
+        lastTap = now
+        
+        let pts = greenMode ? 2 : 1
+        score += pts * combo
+        
+        btnPressed = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            btnPressed = false
+        }
     }
     
-    func endGame() {
-        gameActive = false; gameOver = true
+    func beginGame() {
+        score = 0
+        timeLeft = 10
+        combo = 1
+        lastTap = nil
+        gameOver = false
+        gameActive = true
+        startColourCycle()
+    }
+    
+    func finish() {
+        gameActive = false
+        gameOver = true
+        colourTimer?.invalidate()
         if score > highScore { highScore = score }
-        trapTimer?.invalidate()
     }
     
-    func resetGame() {
-        score = 0; timeLeft = 10; gameOver = false; gameActive = false; isGreenMode = false
+    func restartGame() {
+        score = 0
+        timeLeft = 10
+        combo = 1
+        lastTap = nil
+        greenMode = false
+        gameOver = false
+        gameActive = false
     }
     
-    func startTrapTimer() {
-        trapTimer?.invalidate()
-        trapTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            withAnimation(.easeInOut(duration: 0.4)) { self.isGreenMode = Bool.random() }
+    func startColourCycle() {
+        colourTimer?.invalidate()
+        colourTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.greenMode = Bool.random()
+            }
         }
     }
 }
