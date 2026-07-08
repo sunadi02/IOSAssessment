@@ -27,11 +27,11 @@ struct ContentView: View {
                         NavigationLink(destination: LightItUpView()) {
                             ModeButton(title: "LIGHT IT UP", desc: "hit the glowing card before it fades", icon: "lightbulb.fill", accent: Color.blue)
                         }
-                        NavigationLink(destination: InfiniteView()) {
+                        NavigationLink(destination: QuizRushView()) {
                             ModeButton(
-                                title: "Infinite",
-                                desc: "no timer - survive as long as you can",
-                                icon: "infinity",
+                                title: "Quiz Rush",
+                                desc: "10 trivia questions — answer fast",
+                                icon: "questionmark.bubble.fill",
                                 accent: .orange
                             )
                         }
@@ -82,3 +82,4 @@ struct ModeButton: View {
         .cornerRadius(14)
     }
 }
+
