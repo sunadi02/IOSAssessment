@@ -2,28 +2,83 @@ import SwiftUI
 
 struct QuizRushView: View {
     
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = QuizRushViewModel()
     @State private var shake = false
     @State private var flashCorrect = false
     
     var body: some View {
         ZStack {
-            Color(white: 0.07).ignoresSafeArea()
-            
-            switch vm.state {
-            case .loading:
-                loadingView
-            case .failed:
-                errorView
-            case .loaded:
-                gameView
-            case .finished:
-                resultsView
+            background
+
+            VStack(spacing: 16) {
+                topBar
+
+                ZStack {
+                    switch vm.state {
+                    case .loading:
+                        loadingView
+                    case .failed:
+                        errorView
+                    case .loaded:
+                        gameView
+                    case .finished:
+                        resultsView
+                    }
+                }
+                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity)
+                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .cornerRadius(28)
             }
         }
         .task { await vm.load() }
         .navigationTitle("Quiz Rush")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+    }
+
+    var background: some View {
+        LinearGradient(
+            colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    var topBar: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .frame(width: 38, height: 38)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.blue.opacity(0.10), radius: 8, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("PixelPlay")
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                Text("Quiz Rush")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+            }
+
+            Spacer()
+        }
     }
     
     // MARK: - Loading

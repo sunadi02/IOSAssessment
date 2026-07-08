@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct InfiniteView: View {
+    @Environment(\.dismiss) private var dismiss
     
     @AppStorage("infiniteHighScore") private var highScore = 0
     @AppStorage("infiniteHighStreak") private var highStreak = 0
@@ -40,27 +41,81 @@ struct InfiniteView: View {
     
     var body: some View {
         ZStack {
-            Color(white: 0.07).ignoresSafeArea()
-            
-            if gameOver {
-                endScreen
-            } else {
-                mainView
-            }
-            
-            if showFeedback {
-                VStack {
-                    Spacer()
-                    Text(feedbackText)
-                        .font(.system(size: 22, weight: .black))
-                        .foregroundColor(.yellow)
-                        .padding(.bottom, 120)
-                        .transition(.opacity)
+            background
+
+            VStack(spacing: 16) {
+                topBar
+
+                ZStack {
+                    if gameOver {
+                        endScreen
+                    } else {
+                        mainView
+                    }
+
+                    if showFeedback {
+                        VStack {
+                            Spacer()
+                            Text(feedbackText)
+                                .font(.system(size: 22, weight: .black))
+                                .foregroundColor(.yellow)
+                                .padding(.bottom, 120)
+                                .transition(.opacity)
+                        }
+                    }
                 }
+                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity)
+                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .cornerRadius(28)
             }
         }
         .navigationTitle("Infinite")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+    }
+
+    var background: some View {
+        LinearGradient(
+            colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    var topBar: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .frame(width: 38, height: 38)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.blue.opacity(0.10), radius: 8, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("PixelPlay")
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                Text("Infinite")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+            }
+
+            Spacer()
+        }
     }
     
     var mainView: some View {

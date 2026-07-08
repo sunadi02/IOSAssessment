@@ -23,7 +23,7 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
-        .tint(.white)
-        .preferredColorScheme(.dark)
+        .tint(Color(red: 0.12, green: 0.48, blue: 0.88))
+        .preferredColorScheme(.light)
     }
 }
