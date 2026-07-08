@@ -10,33 +10,9 @@
 		DF0766CA2FD4286F00DB12CD /* IOSTutorialGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IOSTutorialGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DF6CC6872FFE4ED8007EB598 /* Exceptions for "IOSTutorialGame" folder in "IOSTutorialGame" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				QuizRushView.swift,
-			);
-			target = DF0766C92FD4286F00DB12CD /* IOSTutorialGame */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		DF6CC6882FFE4ED8007EB598 /* Exceptions for "IOSTutorialGame" folder in "Copy Bundle Resources" phase from "IOSTutorialGame" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = DF0766C82FD4286F00DB12CD /* Resources */;
-			membershipExceptions = (
-				QuizRushView.swift,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DF0766CC2FD4286F00DB12CD /* IOSTutorialGame */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DF6CC6872FFE4ED8007EB598 /* Exceptions for "IOSTutorialGame" folder in "IOSTutorialGame" target */,
-				DF6CC6882FFE4ED8007EB598 /* Exceptions for "IOSTutorialGame" folder in "Copy Bundle Resources" phase from "IOSTutorialGame" target */,
-			);
 			path = IOSTutorialGame;
 			sourceTree = "<group>";
 		};
@@ -277,6 +253,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -308,6 +285,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
