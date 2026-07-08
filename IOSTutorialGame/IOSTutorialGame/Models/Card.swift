@@ -1,7 +1,7 @@
 import Foundation
 
 enum CardType {
-    case normal, bonus
+    case normal, bonus, heart
 }
 
 struct Card: Identifiable {

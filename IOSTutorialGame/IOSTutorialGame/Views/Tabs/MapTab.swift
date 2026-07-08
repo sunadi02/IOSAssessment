@@ -4,7 +4,7 @@ import MapKit
 struct MapTab: View {
     @ObservedObject private var store = SessionStore.shared
     @ObservedObject private var location = LocationService.shared
-    @State private var selected: GameSession? = nil
+    @State private var selected: LocationCluster? = nil
     @State private var cameraPosition: MapCameraPosition = .automatic
     
     var body: some View {
@@ -25,7 +25,10 @@ struct MapTab: View {
                 }
             }
             .navigationBarHidden(true)
-            .onAppear(perform: centerOnCurrentLocation)
+            .onAppear {
+                location.refresh()
+                centerOnCurrentLocation()
+            }
             .onChange(of: location.lastLocation) { _, _ in
                 centerOnCurrentLocation()
             }
@@ -51,7 +54,7 @@ struct MapTab: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("PixelPlay Map")
+            Text("Arcade Atlas Map")
                 .font(.system(size: 32, weight: .black, design: .rounded))
                 .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
             Text("Your current location and recent game pins live in one view.")
@@ -95,20 +98,17 @@ struct MapTab: View {
 
     private var mapCard: some View {
         Map(position: $cameraPosition) {
-            ForEach(store.sessions.filter { $0.latitude != 0 }) { session in
-                Annotation(session.mode.rawValue, coordinate: CLLocationCoordinate2D(
-                    latitude: session.latitude,
-                    longitude: session.longitude
-                )) {
+            ForEach(locationClusters) { cluster in
+                Annotation(cluster.title, coordinate: cluster.coordinate) {
                     Button {
-                        selected = session
+                        selected = cluster
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(pinColor(session.mode))
-                                .frame(width: 30, height: 30)
-                                .shadow(color: pinColor(session.mode).opacity(0.3), radius: 8, x: 0, y: 4)
-                            Text("\(session.score)")
+                                .fill(cluster.pinColor)
+                                .frame(width: 34, height: 34)
+                                .shadow(color: cluster.pinColor.opacity(0.3), radius: 8, x: 0, y: 4)
+                            Text("\(cluster.sessions.count)")
                                 .font(.system(size: 9, weight: .bold))
                                 .foregroundColor(.white)
                         }
@@ -149,15 +149,24 @@ struct MapTab: View {
             if let s = selected {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(s.playerName)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                        Text(s.title)
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
-                        Text("\(s.mode.rawValue) · \(s.score) points")
-                            .font(.system(size: 13, weight: .medium))
+                        Text(s.summary)
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(red: 0.43, green: 0.50, blue: 0.62))
-                        Text(s.timestamp.formatted(date: .abbreviated, time: .shortened))
-                            .font(.system(size: 12))
+                        Text("\(s.sessions.count) sessions")
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(Color(red: 0.53, green: 0.58, blue: 0.68))
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(s.gamesSummary, id: \.self) { line in
+                                Text(line)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(Color(red: 0.22, green: 0.28, blue: 0.40))
+                            }
+                        }
+                        .padding(.top, 4)
                     }
 
                     Spacer()
@@ -182,8 +191,17 @@ struct MapTab: View {
                 )
                 .cornerRadius(22)
                 .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
+                .transition(.scale.combined(with: .opacity))
             }
         }
+    }
+
+    private var locationClusters: [LocationCluster] {
+        Dictionary(grouping: store.sessions.filter { $0.latitude != 0 }, by: { $0.locationKey })
+            .map { key, sessions in
+                LocationCluster(key: key, sessions: sessions)
+            }
+            .sorted { $0.sessions.count > $1.sessions.count }
     }
 
     private func centerOnCurrentLocation() {
@@ -200,5 +218,36 @@ struct MapTab: View {
         case .lightItUp: return Color(red: 0.62, green: 0.28, blue: 0.92)
         case .quizRush: return Color(red: 0.16, green: 0.72, blue: 0.56)
         }
+    }
+}
+
+private struct LocationCluster: Identifiable {
+    let key: String
+    let sessions: [GameSession]
+
+    var id: String { key }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: sessions[0].latitude, longitude: sessions[0].longitude)
+    }
+
+    var title: String {
+        sessions.count == 1 ? sessions[0].mode.rawValue : "\(sessions.count) games"
+    }
+
+    var summary: String {
+        Array(Set(sessions.map { $0.mode.rawValue })).sorted().joined(separator: " · ")
+    }
+
+    var gamesSummary: [String] {
+        sessions
+            .sorted { $0.timestamp > $1.timestamp }
+            .map { "\($0.mode.rawValue) · \($0.playerName) · \($0.score) pts" }
+    }
+
+    var pinColor: Color {
+        if sessions.contains(where: { $0.mode == .quizRush }) { return Color(red: 0.16, green: 0.72, blue: 0.56) }
+        if sessions.contains(where: { $0.mode == .lightItUp }) { return Color(red: 0.62, green: 0.28, blue: 0.92) }
+        return Color(red: 0.10, green: 0.45, blue: 0.96)
     }
 }

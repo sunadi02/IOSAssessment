@@ -52,6 +52,10 @@ struct GameSession: Codable, Identifiable {
         try container.encode(latitude, forKey: .latitude)
         try container.encode(longitude, forKey: .longitude)
     }
+
+    var locationKey: String {
+        String(format: "%.4f,%.4f", latitude, longitude)
+    }
 }
 
 private extension String {

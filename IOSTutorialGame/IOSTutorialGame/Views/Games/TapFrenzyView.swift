@@ -80,7 +80,7 @@ struct TapFrenzyView: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("PixelPlay")
+                Text("Arcade Atlas")
                     .font(.system(size: 20, weight: .black, design: .rounded))
                     .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
                 Text("Tap Frenzy")

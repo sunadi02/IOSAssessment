@@ -58,7 +58,7 @@ struct SettingsTab: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("PixelPlay Settings")
+            Text("Arcade Atlas Settings")
                 .font(.system(size: 32, weight: .black, design: .rounded))
                 .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
             Text("Set your name, reminder time, and local data preferences.")

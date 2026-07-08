@@ -4,6 +4,7 @@ struct HomeTab: View {
     @ObservedObject private var store = SessionStore.shared
     @ObservedObject private var location = LocationService.shared
     @AppStorage("playerName") private var playerName = ""
+    @State private var stackResetToken = UUID()
 
     var body: some View {
         NavigationStack {
@@ -51,7 +52,7 @@ struct HomeTab: View {
                             QuizRushView()
                         }
 
-                        NavigationLink(destination: StatsTab()) {
+                        NavigationLink(destination: LeaderboardView()) {
                             leaderboardCard
                         }
                         .buttonStyle(.plain)
@@ -63,6 +64,10 @@ struct HomeTab: View {
                 }
             }
             .navigationBarHidden(true)
+            .id(stackResetToken)
+            .onAppear {
+                stackResetToken = UUID()
+            }
         }
     }
 
@@ -86,7 +91,7 @@ struct HomeTab: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            Text("PixelPlay")
+            Text("Arcade Atlas")
                 .font(.system(size: 38, weight: .black, design: .rounded))
                 .foregroundStyle(Color(red: 0.12, green: 0.22, blue: 0.43))
 

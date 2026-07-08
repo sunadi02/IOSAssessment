@@ -16,6 +16,11 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.distanceFilter = 10
         manager.requestWhenInUseAuthorization()
         manager.startUpdatingLocation()
+        manager.requestLocation()
+    }
+
+    func refresh() {
+        manager.requestLocation()
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

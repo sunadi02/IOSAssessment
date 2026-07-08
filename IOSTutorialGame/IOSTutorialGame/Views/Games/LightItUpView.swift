@@ -25,9 +25,9 @@ enum Level: Int, CaseIterable {
     var baseWindow: Double {
         switch self {
         case .l1: return 1.5
-        case .l2: return 1.2
-        case .l3: return 1.0
-        case .l4: return 0.8
+        case .l2: return 1.35
+        case .l3: return 1.15
+        case .l4: return 1.0
         }
     }
     
@@ -68,8 +68,8 @@ struct LightItUpView: View {
     
     // window shrinks as streak grows
     var currentWindow: Double {
-        let reduction = min(Double(streak) * 0.05, 0.4)
-        return max(level.baseWindow - reduction, 0.4)
+        let reduction = min(Double(streak) * 0.03, 0.25)
+        return max(level.baseWindow - reduction, 0.65)
     }
     
     let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -154,7 +154,7 @@ struct LightItUpView: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("PixelPlay")
+                Text("Arcade Atlas")
                     .font(.system(size: 20, weight: .black, design: .rounded))
                     .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
                 Text("Light It Up")
@@ -252,10 +252,19 @@ struct LightItUpView: View {
                     )
                     .overlay(
                         Group {
-                            if card.isLit && card.type == .bonus {
-                                Text("+3")
-                                    .font(.system(size: 20, weight: .black))
-                                    .foregroundColor(.black)
+                            if card.isLit {
+                                switch card.type {
+                                case .bonus:
+                                    Text("+3")
+                                        .font(.system(size: 20, weight: .black))
+                                        .foregroundColor(.black)
+                                case .heart:
+                                    Image(systemName: "heart.fill")
+                                        .font(.system(size: 18, weight: .black))
+                                        .foregroundColor(.white)
+                                case .normal:
+                                    EmptyView()
+                                }
                             }
                         }
                     )
@@ -268,11 +277,19 @@ struct LightItUpView: View {
     
     func cardColour(_ card: Card) -> Color {
         if !card.isLit { return Color(white: 0.13) }
-        return card.type == .bonus ? .yellow : level.colour
+        switch card.type {
+        case .bonus: return .yellow
+        case .heart: return .pink
+        case .normal: return level.colour
+        }
     }
     
     func cardGlow(_ card: Card) -> Color {
-        card.type == .bonus ? Color.yellow.opacity(0.6) : level.colour.opacity(0.55)
+        switch card.type {
+        case .bonus: return Color.yellow.opacity(0.6)
+        case .heart: return Color.pink.opacity(0.6)
+        case .normal: return level.colour.opacity(0.55)
+        }
     }
     
     var endScreen: some View {
@@ -362,8 +379,14 @@ struct LightItUpView: View {
               let i = cards.firstIndex(where: { $0.id == card.id }) else { return }
         
         if cards[i].isLit {
-            let pts = cards[i].type == .bonus ? 3 : 1
-            score += pts
+            switch cards[i].type {
+            case .bonus:
+                score += 3
+            case .heart:
+                lives = min(5, lives + 1)
+            case .normal:
+                score += 1
+            }
             streak += 1
             bestStreakThisRound = max(bestStreakThisRound, streak)
             
@@ -452,8 +475,13 @@ struct LightItUpView: View {
                     if !pool.isEmpty {
                         let idx = pool.removeFirst()
                         self.cards[idx].isLit = true
-                        // 20% chance first card is bonus, never second
-                        self.cards[idx].type = (j == 0 && Int.random(in: 0..<5) == 0) ? .bonus : .normal
+                        if j == 0 && Int.random(in: 0..<14) == 0 {
+                            self.cards[idx].type = .heart
+                        } else if j == 0 && Int.random(in: 0..<5) == 0 {
+                            self.cards[idx].type = .bonus
+                        } else {
+                            self.cards[idx].type = .normal
+                        }
                     }
                 }
             }

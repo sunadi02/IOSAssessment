@@ -13,9 +13,6 @@ struct StatsTab: View {
                     VStack(alignment: .leading, spacing: 20) {
                         header
 
-                        sectionLabel("Leaderboard")
-                        leaderboardCard
-
                         sectionLabel("Personal Bests")
                         VStack(spacing: 12) {
                             bestRow(mode: .tapFrenzy, icon: "hand.tap.fill", accent: Color(red: 0.10, green: 0.45, blue: 0.96))
@@ -60,7 +57,7 @@ struct StatsTab: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                Text("PixelPlay Stats")
+                Text("Arcade Atlas Stats")
                     .font(.system(size: 32, weight: .black, design: .rounded))
                     .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
                 Text("Track performance, recent runs, and leaderboard position.")
@@ -78,28 +75,6 @@ struct StatsTab: View {
             .tracking(1.2)
             .foregroundColor(Color(red: 0.36, green: 0.44, blue: 0.58))
             .padding(.horizontal, 4)
-    }
-
-    private var leaderboardCard: some View {
-        VStack(spacing: 10) {
-            if store.leaderboard().isEmpty {
-                emptyStateCard(title: "No leaderboard yet", subtitle: "Play a round and your score will appear here.")
-            } else {
-                VStack(spacing: 10) {
-                    ForEach(store.leaderboard(limit: 5)) { session in
-                        leaderboardRow(session)
-                    }
-                }
-            }
-        }
-        .padding(18)
-        .background(Color.white)
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
-        )
-        .cornerRadius(22)
-        .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
     }
 
     private var chartCard: some View {
@@ -153,42 +128,6 @@ struct StatsTab: View {
         .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
     }
 
-    private func leaderboardRow(_ session: GameSession) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(modeColor(session.mode).opacity(0.18))
-                    .frame(width: 42, height: 42)
-                Text(initials(for: session.playerName))
-                    .font(.system(size: 13, weight: .black, design: .rounded))
-                    .foregroundColor(modeColor(session.mode))
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(session.playerName)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
-                Text(session.mode.rawValue)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(red: 0.41, green: 0.48, blue: 0.60))
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 3) {
-                Text("\(session.score)")
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundColor(Color(red: 0.10, green: 0.16, blue: 0.28))
-                Text(session.timestamp, style: .relative)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color(red: 0.50, green: 0.56, blue: 0.66))
-            }
-        }
-        .padding(14)
-        .background(Color(red: 0.98, green: 0.99, blue: 1.0))
-        .cornerRadius(16)
-    }
-    
     func bestRow(mode: GameMode, icon: String, accent: Color) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
@@ -257,13 +196,6 @@ struct StatsTab: View {
         .cornerRadius(16)
     }
 
-    private func initials(for name: String) -> String {
-        let parts = name.split(separator: " ")
-        let letters = parts.prefix(2).compactMap { $0.first }
-        let string = String(letters)
-        return string.isEmpty ? "P" : string.uppercased()
-    }
-    
     func modeColor(_ mode: GameMode) -> Color {
         switch mode {
         case .tapFrenzy: return Color(red: 0.10, green: 0.45, blue: 0.96)
