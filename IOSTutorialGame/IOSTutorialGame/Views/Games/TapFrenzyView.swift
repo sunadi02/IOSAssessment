@@ -3,6 +3,7 @@ import Combine
 
 struct TapFrenzyView: View {
     @Environment(\.dismiss) private var dismiss
+    let isChallengeMode: Bool
     
     @AppStorage("tapFrenzyHighScore") private var highScore = 0
     @AppStorage("playerName") private var playerName = "Player"
@@ -18,6 +19,10 @@ struct TapFrenzyView: View {
     @State private var colourTimer: Timer? = nil
     
     let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    init(isChallengeMode: Bool = false) {
+        self.isChallengeMode = isChallengeMode
+    }
     
     var body: some View {
         ZStack {
@@ -88,6 +93,23 @@ struct TapFrenzyView: View {
                     .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
             }
 
+            if isChallengeMode {
+                Spacer()
+
+                Text("DAILY CHALLENGE")
+                    .font(.system(size: 11, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundColor(Color(red: 0.12, green: 0.48, blue: 0.88))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Color.white)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+                    )
+                    .clipShape(Capsule())
+            }
+
             Spacer()
         }
     }
@@ -134,9 +156,11 @@ struct TapFrenzyView: View {
             
             Spacer()
             
-            Text("best: \(highScore)")
-                .font(.footnote)
-                .foregroundColor(Color(white: 0.35))
+            if !isChallengeMode {
+                Text("best: \(highScore)")
+                    .font(.footnote)
+                    .foregroundColor(Color(white: 0.35))
+            }
         }
         .padding()
     }
@@ -148,9 +172,11 @@ struct TapFrenzyView: View {
                 .foregroundColor(.white)
             
             if score > 0 && score >= highScore {
-                Text("🏆 new high score!")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.yellow)
+                if !isChallengeMode {
+                    Text("🏆 new high score!")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.yellow)
+                }
             }
             
             VStack(spacing: 4) {
@@ -162,22 +188,26 @@ struct TapFrenzyView: View {
                     .foregroundColor(.gray)
             }
             
-            Text("best: \(highScore)")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            ShareLink(item: "I just scored \(score) on Quiz Rush 🎮 — beat that!") {
-                HStack(spacing: 8) {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("share score")
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 180, height: 44)
-                .background(Color(white: 0.18))
-                .cornerRadius(10)
+            if !isChallengeMode {
+                Text("best: \(highScore)")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
             }
-            .padding(.bottom, 12)
+            
+            if !isChallengeMode {
+                ShareLink(item: "I just scored \(score) on Quiz Rush 🎮 — beat that!") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("share score")
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 180, height: 44)
+                    .background(Color(white: 0.18))
+                    .cornerRadius(10)
+                }
+                .padding(.bottom, 12)
+            }
             Button("play again") {
                 restartGame()
             }
@@ -240,9 +270,11 @@ struct TapFrenzyView: View {
         gameActive = false
         gameOver = true
         colourTimer?.invalidate()
-        if score > highScore { highScore = score }
-        let loc = LocationService.shared.coordinate
-        SessionStore.shared.save(GameSession(mode: .tapFrenzy, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+        if !isChallengeMode {
+            if score > highScore { highScore = score }
+            let loc = LocationService.shared.coordinate
+            SessionStore.shared.save(GameSession(mode: .tapFrenzy, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+        }
     }
     
     func restartGame() {

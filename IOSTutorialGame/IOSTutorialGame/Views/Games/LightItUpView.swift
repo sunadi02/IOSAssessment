@@ -47,6 +47,7 @@ enum Level: Int, CaseIterable {
 
 struct LightItUpView: View {
     @Environment(\.dismiss) private var dismiss
+    let isChallengeMode: Bool
     
     @AppStorage("lightItUpHighScore") private var highScore = 0
     @AppStorage("lightItUpHighStreak") private var highStreak = 0
@@ -65,6 +66,10 @@ struct LightItUpView: View {
     @State private var bestStreakThisRound = 0
     @State private var streakFeedback = ""
     @State private var showStreakFeedback = false
+
+    init(isChallengeMode: Bool = false) {
+        self.isChallengeMode = isChallengeMode
+    }
     
     // window shrinks as streak grows
     var currentWindow: Double {
@@ -162,6 +167,23 @@ struct LightItUpView: View {
                     .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
             }
 
+            if isChallengeMode {
+                Spacer()
+
+                Text("DAILY CHALLENGE")
+                    .font(.system(size: 11, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundColor(Color(red: 0.12, green: 0.48, blue: 0.88))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Color.white)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+                    )
+                    .clipShape(Capsule())
+            }
+
             Spacer()
         }
     }
@@ -228,10 +250,14 @@ struct LightItUpView: View {
             
             Spacer()
             
-            Text("best  \(highScore)")
-                .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.3))
-                .padding(.bottom, 30)
+            if !isChallengeMode {
+                Text("best  \(highScore)")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(white: 0.3))
+                    .padding(.bottom, 30)
+            } else {
+                Spacer(minLength: 30)
+            }
         }
     }
     
@@ -309,7 +335,7 @@ struct LightItUpView: View {
                 .font(.system(size: 14))
                 .foregroundColor(Color(white: 0.4))
             
-            if score > 0 && score >= highScore {
+            if !isChallengeMode, score > 0 && score >= highScore {
                 Text("🏆 new best!")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.yellow)
@@ -336,24 +362,28 @@ struct LightItUpView: View {
             }
             .padding(.top, 16)
             
-            Text("best score  \(highScore)")
-                .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.35))
-                .padding(.top, 8)
+            if !isChallengeMode {
+                Text("best score  \(highScore)")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(white: 0.35))
+                    .padding(.top, 8)
+            }
             
             Spacer()
-            ShareLink(item: "I just scored \(score) on Quiz Rush 🎮 — beat that!") {
-                HStack(spacing: 8) {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("share score")
+            if !isChallengeMode {
+                ShareLink(item: "I just scored \(score) on Quiz Rush 🎮 — beat that!") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("share score")
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 180, height: 44)
+                    .background(Color(white: 0.18))
+                    .cornerRadius(10)
                 }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 180, height: 44)
-                .background(Color(white: 0.18))
-                .cornerRadius(10)
+                .padding(.bottom, 12)
             }
-            .padding(.bottom, 12)
             Button("play again") { restartGame() }
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.black)
@@ -427,10 +457,12 @@ struct LightItUpView: View {
     func finish() {
         gameActive = false; gameOver = true
         litTimer?.invalidate()
-        if score > highScore { highScore = score }
-        if bestStreakThisRound > highStreak { highStreak = bestStreakThisRound }
-        let loc = LocationService.shared.coordinate
-        SessionStore.shared.save(GameSession(mode: .lightItUp, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+        if !isChallengeMode {
+            if score > highScore { highScore = score }
+            if bestStreakThisRound > highStreak { highStreak = bestStreakThisRound }
+            let loc = LocationService.shared.coordinate
+            SessionStore.shared.save(GameSession(mode: .lightItUp, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+        }
     }
     
     func restartGame() {

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var challengeRouter = ChallengeRouter.shared
+
     var body: some View {
         TabView {
             HomeTab()
@@ -25,5 +27,8 @@ struct ContentView: View {
         }
         .tint(Color(red: 0.12, green: 0.48, blue: 0.88))
         .preferredColorScheme(.light)
+        .fullScreenCover(item: $challengeRouter.activeChallenge) { challenge in
+            ChallengeGameHostView(game: challenge)
+        }
     }
 }

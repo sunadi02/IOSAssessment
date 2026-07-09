@@ -11,6 +11,7 @@ enum QuizState {
 
 @MainActor
 class QuizRushViewModel: ObservableObject {
+    private let persistResults: Bool
     
     @AppStorage("quizHighScore") var highScore = 0
     @AppStorage("playerName") var playerName = "Player"
@@ -26,6 +27,10 @@ class QuizRushViewModel: ObservableObject {
     @Published var errorMessage = ""
     
     private var timer: Timer?
+
+    init(persistResults: Bool = true) {
+        self.persistResults = persistResults
+    }
     
     var current: TriviaQuestion? {
         guard currentIndex < questions.count else { return nil }
@@ -76,9 +81,11 @@ class QuizRushViewModel: ObservableObject {
     
     func nextQuestion() {
         if currentIndex + 1 >= questions.count {
-            if score > highScore { highScore = score }
-            let loc = LocationService.shared.coordinate
-            SessionStore.shared.save(GameSession(mode: .quizRush, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+            if persistResults {
+                if score > highScore { highScore = score }
+                let loc = LocationService.shared.coordinate
+                SessionStore.shared.save(GameSession(mode: .quizRush, score: score, playerName: playerName, latitude: loc.lat, longitude: loc.lon))
+            }
             state = .finished
         } else {
             currentIndex += 1

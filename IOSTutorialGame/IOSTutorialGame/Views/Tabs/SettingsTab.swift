@@ -108,8 +108,13 @@ struct SettingsTab: View {
                         .tint(Color(red: 0.12, green: 0.48, blue: 0.88))
                         .onChange(of: notificationsOn, initial: false) { _, newValue in
                             if newValue {
-                                NotificationService.shared.requestPermission()
-                                NotificationService.shared.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                                NotificationService.shared.requestPermission { granted in
+                                    if granted {
+                                        NotificationService.shared.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                                    } else {
+                                        notificationsOn = false
+                                    }
+                                }
                             } else {
                                 NotificationService.shared.cancelAll()
                             }
@@ -125,7 +130,9 @@ struct SettingsTab: View {
                                 let components = Calendar.current.dateComponents([.hour, .minute], from: date)
                                 reminderHour = components.hour ?? 9
                                 reminderMinute = components.minute ?? 0
-                                NotificationService.shared.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                                if notificationsOn {
+                                    NotificationService.shared.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                                }
                             }
                         ),
                         displayedComponents: .hourAndMinute

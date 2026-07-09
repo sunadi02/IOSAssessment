@@ -3,8 +3,12 @@ import UserNotifications
 class NotificationService {
     static let shared = NotificationService()
     
-    func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+    func requestPermission(completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+            DispatchQueue.main.async {
+                completion(granted)
+            }
+        }
     }
     
     func scheduleDailyReminder(hour: Int, minute: Int) {

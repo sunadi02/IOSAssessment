@@ -3,9 +3,15 @@ import SwiftUI
 struct QuizRushView: View {
     
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var vm = QuizRushViewModel()
+    let isChallengeMode: Bool
+    @StateObject private var vm: QuizRushViewModel
     @State private var shake = false
     @State private var flashCorrect = false
+
+    init(isChallengeMode: Bool = false) {
+        self.isChallengeMode = isChallengeMode
+        _vm = StateObject(wrappedValue: QuizRushViewModel(persistResults: !isChallengeMode))
+    }
     
     var body: some View {
         ZStack {
@@ -75,6 +81,23 @@ struct QuizRushView: View {
                 Text("Quiz Rush")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+            }
+
+            if isChallengeMode {
+                Spacer()
+
+                Text("DAILY CHALLENGE")
+                    .font(.system(size: 11, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundColor(Color(red: 0.12, green: 0.48, blue: 0.88))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Color.white)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+                    )
+                    .clipShape(Capsule())
             }
 
             Spacer()
@@ -288,7 +311,7 @@ struct QuizRushView: View {
                 .font(.system(size: 14))
                 .foregroundColor(Color(white: 0.4))
             
-            if vm.score > 0 && vm.score >= vm.highScore {
+            if !isChallengeMode, vm.score > 0 && vm.score >= vm.highScore {
                 Text("🏆 new best!")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.yellow)
@@ -304,30 +327,34 @@ struct QuizRushView: View {
                         .font(.system(size: 11))
                         .foregroundColor(Color(white: 0.4))
                 }
-                VStack(spacing: 3) {
-                    Text("\(vm.highScore)")
-                        .font(.system(size: 28, weight: .black, design: .monospaced))
-                        .foregroundColor(Color(white: 0.6))
-                    Text("all-time best")
-                        .font(.system(size: 11))
-                        .foregroundColor(Color(white: 0.4))
+                if !isChallengeMode {
+                    VStack(spacing: 3) {
+                        Text("\(vm.highScore)")
+                            .font(.system(size: 28, weight: .black, design: .monospaced))
+                            .foregroundColor(Color(white: 0.6))
+                        Text("all-time best")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color(white: 0.4))
+                    }
                 }
             }
             .padding(.top, 20)
             
             Spacer()
-            ShareLink(item: "I just scored \(vm.score) on Quiz Rush 🎮 — beat that!") {
-                HStack(spacing: 8) {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("share score")
+            if !isChallengeMode {
+                ShareLink(item: "I just scored \(vm.score) on Quiz Rush 🎮 — beat that!") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("share score")
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 180, height: 44)
+                    .background(Color(white: 0.18))
+                    .cornerRadius(10)
                 }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 180, height: 44)
-                .background(Color(white: 0.18))
-                .cornerRadius(10)
+                .padding(.bottom, 12)
             }
-            .padding(.bottom, 12)
             Button("play again") {
                 Task { await vm.load() }
             }
