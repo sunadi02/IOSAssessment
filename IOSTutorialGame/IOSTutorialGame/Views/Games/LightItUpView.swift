@@ -24,10 +24,10 @@ enum Level: Int, CaseIterable {
     
     var baseWindow: Double {
         switch self {
-        case .l1: return 1.5
-        case .l2: return 1.35
-        case .l3: return 1.15
-        case .l4: return 1.0
+        case .l1: return 1.3
+        case .l2: return 1.1
+        case .l3: return 0.9
+        case .l4: return 0.75
         }
     }
     
@@ -47,6 +47,7 @@ enum Level: Int, CaseIterable {
 
 struct LightItUpView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     let isChallengeMode: Bool
     
     @AppStorage("lightItUpHighScore") private var highScore = 0
@@ -56,7 +57,7 @@ struct LightItUpView: View {
     @State private var cards: [Card] = []
     @State private var score = 0
     @State private var lives = 5
-    @State private var timeLeft = 60
+    @State private var timeLeft = 150
     @State private var gameActive = false
     @State private var gameOver = false
     @State private var level: Level = .l1
@@ -67,14 +68,48 @@ struct LightItUpView: View {
     @State private var streakFeedback = ""
     @State private var showStreakFeedback = false
 
+    private let roundDuration = 150
+
     init(isChallengeMode: Bool = false) {
         self.isChallengeMode = isChallengeMode
     }
     
     // window shrinks as streak grows
     var currentWindow: Double {
-        let reduction = min(Double(streak) * 0.03, 0.25)
-        return max(level.baseWindow - reduction, 0.65)
+        let streakReduction = min(Double(streak) * 0.05, 0.35)
+        return max(level.baseWindow - streakReduction, 0.55)
+    }
+
+    private var isDarkMode: Bool {
+        colorScheme == .dark
+    }
+
+    private var shellBackground: Color {
+        isDarkMode ? Color(red: 0.06, green: 0.07, blue: 0.11) : Color(red: 0.08, green: 0.10, blue: 0.16)
+    }
+
+    private var shellBorder: Color {
+        isDarkMode ? Color.white.opacity(0.12) : Color.white.opacity(0.08)
+    }
+
+    private var heroPrimary: Color {
+        isDarkMode ? .white : Color(red: 0.12, green: 0.22, blue: 0.43)
+    }
+
+    private var heroSecondary: Color {
+        isDarkMode ? Color.white.opacity(0.68) : Color(red: 0.40, green: 0.48, blue: 0.60)
+    }
+
+    private var mutedText: Color {
+        isDarkMode ? Color.white.opacity(0.58) : Color(white: 0.4)
+    }
+
+    private var panelText: Color {
+        .white
+    }
+
+    private var timeDisplay: String {
+        String(format: "%d:%02d", timeLeft / 60, timeLeft % 60)
     }
     
     let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -110,10 +145,10 @@ struct LightItUpView: View {
                 }
                 .padding(.vertical, 20)
                 .frame(maxWidth: .infinity)
-                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .background(shellBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(shellBorder, lineWidth: 1)
                 )
                 .cornerRadius(28)
             }
@@ -136,7 +171,7 @@ struct LightItUpView: View {
 
     var background: some View {
         LinearGradient(
-            colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+            colors: isDarkMode ? [Color(red: 0.03, green: 0.04, blue: 0.07), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.05, green: 0.06, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -150,21 +185,21 @@ struct LightItUpView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                     .frame(width: 38, height: 38)
-                    .background(Color.white)
+                    .background(isDarkMode ? Color(red: 0.14, green: 0.17, blue: 0.25) : Color.white)
                     .clipShape(Circle())
-                    .shadow(color: Color.blue.opacity(0.10), radius: 8, x: 0, y: 4)
+                    .shadow(color: Color.blue.opacity(isDarkMode ? 0.20 : 0.10), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Arcade Atlas")
+                Text("Playzo")
                     .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                 Text("Light It Up")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+                    .foregroundColor(heroSecondary)
             }
 
             if isChallengeMode {
@@ -190,50 +225,49 @@ struct LightItUpView: View {
     
     var mainView: some View {
         VStack(spacing: 0) {
-            
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(score)")
                         .font(.system(size: 48, weight: .black, design: .monospaced))
-                        .foregroundColor(.white)
+                        .foregroundColor(panelText)
                     Text("score")
                         .font(.system(size: 12))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(mutedText)
                 }
-                
+
                 Spacer()
-                
-                VStack(spacing: 6) {
-                    Text(level.name)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(level.colour)
-                    HStack(spacing: 4) {
-                        ForEach(0..<5, id: \.self) { i in
-                            Image(systemName: i < lives ? "heart.fill" : "heart")
-                                .foregroundColor(i < lives ? .red : Color(white: 0.25))
-                                .font(.system(size: 13))
-                        }
-                    }
-                    if streak > 2 {
-                        Text("🔥 \(streak) streak")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.orange)
-                    }
-                }
-                
-                Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(timeLeft)")
-                        .font(.system(size: 48, weight: .black, design: .monospaced))
-                        .foregroundColor(timeLeft <= 10 ? .red : Color(white: 0.85))
-                    Text("secs left")
+                    Text(timeDisplay)
+                        .font(.system(size: 42, weight: .black, design: .monospaced))
+                        .foregroundColor(timeLeft <= 10 ? .red : (isDarkMode ? .white : Color(white: 0.85)))
+                    Text("time left")
                         .font(.system(size: 12))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(mutedText)
                 }
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
+
+            VStack(alignment: .center, spacing: 6) {
+                Text(level.name)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(level.colour)
+                HStack(spacing: 4) {
+                    ForEach(0..<5, id: \.self) { i in
+                        Image(systemName: i < lives ? "heart.fill" : "heart")
+                            .foregroundColor(i < lives ? .red : mutedText)
+                            .font(.system(size: 13))
+                    }
+                }
+                if streak > 2 {
+                    Text("🔥 \(streak) streak")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.orange)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 10)
             
             Spacer()
             
@@ -253,7 +287,7 @@ struct LightItUpView: View {
             if !isChallengeMode {
                 Text("best  \(highScore)")
                     .font(.system(size: 13))
-                    .foregroundColor(Color(white: 0.3))
+                    .foregroundColor(mutedText)
                     .padding(.bottom, 30)
             } else {
                 Spacer(minLength: 30)
@@ -324,16 +358,16 @@ struct LightItUpView: View {
             
             Text("game over")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(mutedText)
             
             Text("\(score)")
                 .font(.system(size: 96, weight: .black, design: .monospaced))
-                .foregroundColor(.white)
+                .foregroundColor(panelText)
                 .padding(.top, 4)
             
             Text("points")
                 .font(.system(size: 14))
-                .foregroundColor(Color(white: 0.4))
+                .foregroundColor(mutedText)
             
             if !isChallengeMode, score > 0 && score >= highScore {
                 Text("🏆 new best!")
@@ -349,15 +383,15 @@ struct LightItUpView: View {
                         .foregroundColor(.orange)
                     Text("best streak")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(mutedText)
                 }
                 VStack(spacing: 3) {
                     Text("\(highStreak)")
                         .font(.system(size: 28, weight: .black, design: .monospaced))
-                        .foregroundColor(Color(white: 0.6))
+                        .foregroundColor(isDarkMode ? Color(white: 0.78) : Color(white: 0.6))
                     Text("all-time streak")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(mutedText)
                 }
             }
             .padding(.top, 16)
@@ -365,7 +399,7 @@ struct LightItUpView: View {
             if !isChallengeMode {
                 Text("best score  \(highScore)")
                     .font(.system(size: 13))
-                    .foregroundColor(Color(white: 0.35))
+                    .foregroundColor(mutedText)
                     .padding(.top, 8)
             }
             
@@ -447,7 +481,7 @@ struct LightItUpView: View {
     }
     
     func beginGame() {
-        score = 0; lives = 5; timeLeft = 60
+        score = 0; lives = 5; timeLeft = roundDuration
         streak = 0; bestStreakThisRound = 0
         level = .l1; gameOver = false; gameActive = true
         rebuildCards()
@@ -466,7 +500,7 @@ struct LightItUpView: View {
     }
     
     func restartGame() {
-        score = 0; lives = 5; timeLeft = 60
+        score = 0; lives = 5; timeLeft = roundDuration
         streak = 0; bestStreakThisRound = 0
         level = .l1; gameOver = false; gameActive = false; cards = []
     }
@@ -476,11 +510,11 @@ struct LightItUpView: View {
     }
     
     func checkLevelUp() {
-        let elapsed = 60 - timeLeft
+        let elapsed = roundDuration - timeLeft
         let next: Level
-        if elapsed < 15 { next = .l1 }
-        else if elapsed < 30 { next = .l2 }
-        else if elapsed < 45 { next = .l3 }
+        if elapsed < 37 { next = .l1 }
+        else if elapsed < 75 { next = .l2 }
+        else if elapsed < 112 { next = .l3 }
         else { next = .l4 }
         guard next != level else { return }
         level = next
