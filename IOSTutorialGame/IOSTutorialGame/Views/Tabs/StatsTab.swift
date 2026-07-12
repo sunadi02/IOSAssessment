@@ -61,7 +61,6 @@ struct StatsTab: View {
                 Text("Playzo Stats")
                     .font(.system(size: 32, weight: .black, design: .rounded))
                     .foregroundColor(colorScheme == .dark ? .white : Color(red: 0.12, green: 0.22, blue: 0.43))
-                    .shadow(color: Color(red: 0.10, green: 0.45, blue: 0.96).opacity(colorScheme == .dark ? 0.25 : 0.5), radius: 6, x: 0, y: 0)
                 Text("Track performance, recent runs, and leaderboard position.")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.72) : Color(red: 0.34, green: 0.42, blue: 0.56))
