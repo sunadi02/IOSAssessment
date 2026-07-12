@@ -1,6 +1,6 @@
 //
 //  IOSTutorialGameApp.swift
-//  IOSTutorialGame
+//  Playzo
 //
 //  Created by student2 on 2026-06-06.
 //
@@ -39,7 +39,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 }
 
 @main
-struct IOSTutorialGameApp: App {
+struct PlayzoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

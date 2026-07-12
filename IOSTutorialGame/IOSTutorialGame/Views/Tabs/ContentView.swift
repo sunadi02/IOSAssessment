@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var challengeRouter = ChallengeRouter.shared
+    @AppStorage("isDarkMode") private var isDarkMode = false
 
     var body: some View {
         TabView {
@@ -26,7 +27,7 @@ struct ContentView: View {
                 }
         }
         .tint(Color(red: 0.12, green: 0.48, blue: 0.88))
-        .preferredColorScheme(.light)
+        .preferredColorScheme(isDarkMode ? .dark : .light)
         .fullScreenCover(item: $challengeRouter.activeChallenge) { challenge in
             ChallengeGameHostView(game: challenge)
         }

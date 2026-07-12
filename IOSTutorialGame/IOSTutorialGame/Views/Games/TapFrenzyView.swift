@@ -3,6 +3,7 @@ import Combine
 
 struct TapFrenzyView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     let isChallengeMode: Bool
     
     @AppStorage("tapFrenzyHighScore") private var highScore = 0
@@ -19,6 +20,22 @@ struct TapFrenzyView: View {
     @State private var colourTimer: Timer? = nil
     
     let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    private var shellBackground: Color {
+        Color(uiColor: .secondarySystemBackground)
+    }
+
+    private var shellBorder: Color {
+        Color(uiColor: .tertiarySystemFill)
+    }
+
+    private var heroPrimary: Color {
+        Color(uiColor: .label)
+    }
+
+    private var heroSecondary: Color {
+        Color(uiColor: .secondaryLabel)
+    }
 
     init(isChallengeMode: Bool = false) {
         self.isChallengeMode = isChallengeMode
@@ -40,10 +57,10 @@ struct TapFrenzyView: View {
                 }
                 .padding(.vertical, 20)
                 .frame(maxWidth: .infinity)
-                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .background(shellBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(shellBorder, lineWidth: 1)
                 )
                 .cornerRadius(28)
             }
@@ -62,7 +79,7 @@ struct TapFrenzyView: View {
 
     var background: some View {
         LinearGradient(
-            colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+            colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -76,21 +93,21 @@ struct TapFrenzyView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                     .frame(width: 38, height: 38)
-                    .background(Color.white)
+                    .background(Color(uiColor: .systemBackground))
                     .clipShape(Circle())
                     .shadow(color: Color.blue.opacity(0.10), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Arcade Atlas")
+                Text("Playzo")
                     .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                 Text("Tap Frenzy")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+                    .foregroundColor(heroSecondary)
             }
 
             if isChallengeMode {
@@ -169,7 +186,7 @@ struct TapFrenzyView: View {
         VStack(spacing: 20) {
             Text("TIME'S UP")
                 .font(.system(size: 30, weight: .black))
-                .foregroundColor(.white)
+                .foregroundColor(Color(uiColor: .label))
             
             if score > 0 && score >= highScore {
                 if !isChallengeMode {
@@ -182,16 +199,16 @@ struct TapFrenzyView: View {
             VStack(spacing: 4) {
                 Text("\(score)")
                     .font(.system(size: 80, weight: .black, design: .monospaced))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(uiColor: .label))
                 Text("taps")
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color(uiColor: .secondaryLabel))
             }
             
             if !isChallengeMode {
                 Text("best: \(highScore)")
                     .font(.subheadline)
-                    .foregroundColor(.gray)
+                    .foregroundColor(Color(uiColor: .secondaryLabel))
             }
             
             if !isChallengeMode {
@@ -201,9 +218,9 @@ struct TapFrenzyView: View {
                         Text("share score")
                     }
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(uiColor: .label))
                     .frame(width: 180, height: 44)
-                    .background(Color(white: 0.18))
+                    .background(Color(uiColor: .secondarySystemBackground))
                     .cornerRadius(10)
                 }
                 .padding(.bottom, 12)
@@ -212,9 +229,9 @@ struct TapFrenzyView: View {
                 restartGame()
             }
             .font(.system(size: 17, weight: .bold))
-            .foregroundColor(.black)
+            .foregroundColor(Color(uiColor: .label))
             .frame(width: 150, height: 48)
-            .background(Color.white)
+            .background(Color(uiColor: .systemBackground))
             .cornerRadius(10)
             .padding(.top, 8)
         }

@@ -1,4 +1,4 @@
-# IOSTutorialGame — Arcade App
+# Playzo — Arcade App
 
 ## Architecture
 MVVM pattern. Views are kept simple — logic lives in ViewModels and Services.

@@ -3,6 +3,7 @@ import SwiftUI
 struct QuizRushView: View {
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     let isChallengeMode: Bool
     @StateObject private var vm: QuizRushViewModel
     @State private var shake = false
@@ -12,6 +13,11 @@ struct QuizRushView: View {
         self.isChallengeMode = isChallengeMode
         _vm = StateObject(wrappedValue: QuizRushViewModel(persistResults: !isChallengeMode))
     }
+
+    private var shellBackground: Color { Color(uiColor: .secondarySystemBackground) }
+    private var shellBorder: Color { Color(uiColor: .tertiarySystemFill) }
+    private var heroPrimary: Color { Color(uiColor: .label) }
+    private var heroSecondary: Color { Color(uiColor: .secondaryLabel) }
     
     var body: some View {
         ZStack {
@@ -34,10 +40,10 @@ struct QuizRushView: View {
                 }
                 .padding(.vertical, 20)
                 .frame(maxWidth: .infinity)
-                .background(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .background(shellBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(shellBorder, lineWidth: 1)
                 )
                 .cornerRadius(28)
             }
@@ -52,7 +58,7 @@ struct QuizRushView: View {
 
     var background: some View {
         LinearGradient(
-            colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+            colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -66,21 +72,21 @@ struct QuizRushView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                     .frame(width: 38, height: 38)
-                    .background(Color.white)
+                    .background(Color(uiColor: .systemBackground))
                     .clipShape(Circle())
                     .shadow(color: Color.blue.opacity(0.10), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Arcade Atlas")
+                Text("Playzo")
                     .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .foregroundColor(heroPrimary)
                 Text("Quiz Rush")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(red: 0.40, green: 0.48, blue: 0.60))
+                    .foregroundColor(heroSecondary)
             }
 
             if isChallengeMode {
@@ -112,7 +118,7 @@ struct QuizRushView: View {
                 .scaleEffect(1.4)
             Text("fetching questions...")
                 .font(.system(size: 14))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Color(uiColor: .secondaryLabel))
         }
     }
     

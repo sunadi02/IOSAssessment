@@ -1,10 +1,14 @@
 import SwiftUI
+import UIKit
 
 struct HomeTab: View {
     @ObservedObject private var store = SessionStore.shared
     @ObservedObject private var location = LocationService.shared
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("playerName") private var playerName = ""
+    @AppStorage("profileImageBase64") private var profileImageBase64: String = ""
     @State private var stackResetToken = UUID()
+    @State private var goToSettings = false
 
     var body: some View {
         NavigationStack {
@@ -62,6 +66,8 @@ struct HomeTab: View {
                     .padding(.horizontal, 22)
                     .padding(.top, 18)
                 }
+
+                NavigationLink(destination: SettingsTab(), isActive: $goToSettings) { EmptyView() }
             }
             .navigationBarHidden(true)
             .id(stackResetToken)
@@ -74,13 +80,12 @@ struct HomeTab: View {
     private var background: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.94, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+                colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14)] : [Color(uiColor: .systemBackground), Color(uiColor: .secondarySystemBackground)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-
             RadialGradient(
-                colors: [Color.blue.opacity(0.12), .clear],
+                colors: [Color.blue.opacity(0.10), .clear],
                 center: .topTrailing,
                 startRadius: 20,
                 endRadius: 340
@@ -91,41 +96,41 @@ struct HomeTab: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            Text("Arcade Atlas")
+            Text("Playzo")
                 .font(.system(size: 38, weight: .black, design: .rounded))
-                .foregroundStyle(Color(red: 0.12, green: 0.22, blue: 0.43))
+                .foregroundStyle(colorScheme == .dark ? .white : Color(red: 0.12, green: 0.22, blue: 0.43))
 
             Spacer()
 
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(Color(red: 0.12, green: 0.22, blue: 0.43))
-                        .frame(width: 34, height: 34)
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
+            Button {
+                goToSettings = true
+            } label: {
+                HStack(spacing: 10) {
+                    profileAvatar(size: 34)
+                    Text(displayName)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(primaryTextColor)
                 }
-                Text(displayName)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
             }
+            .buttonStyle(.plain)
         }
         .padding(.top, 24)
     }
 
     private var profileCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(spacing: 14) {
+                profileAvatar(size: 56)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Your name")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(red: 0.30, green: 0.38, blue: 0.52))
+                        .foregroundColor(secondaryTextColor)
                     TextField("Enter your name", text: $playerName)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                         .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(Color(red: 0.10, green: 0.16, blue: 0.28))
+                        .foregroundColor(primaryTextColor)
                 }
 
                 Spacer()
@@ -133,22 +138,22 @@ struct HomeTab: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Current location")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(red: 0.30, green: 0.38, blue: 0.52))
+                        .foregroundColor(secondaryTextColor)
                     Text(location.locationDescription)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(red: 0.16, green: 0.22, blue: 0.34))
+                        .foregroundColor(primaryTextColor)
                         .multilineTextAlignment(.trailing)
                 }
             }
         }
         .padding(18)
-        .background(Color.white)
+        .background(cardBackground)
         .overlay(
             RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 0.78, green: 0.87, blue: 0.98), lineWidth: 1)
+                .stroke(cardStroke, lineWidth: 1)
         )
         .cornerRadius(22)
-        .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
+        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.20 : 0.10), radius: 14, x: 0, y: 8)
     }
 
     private var leaderboardCard: some View {
@@ -223,6 +228,44 @@ struct HomeTab: View {
     private var displayName: String {
         let trimmed = playerName.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "Player" : trimmed
+    }
+
+    private func profileAvatar(size: CGFloat) -> some View {
+        ZStack {
+            if let data = Data(base64Encoded: profileImageBase64), !profileImageBase64.isEmpty, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(colorScheme == .dark ? 0.24 : 0.8), lineWidth: 1))
+            } else {
+                Circle()
+                    .fill(Color(red: 0.12, green: 0.22, blue: 0.43))
+                    .frame(width: size, height: size)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: size * 0.42, weight: .bold))
+                            .foregroundColor(.white)
+                    )
+            }
+        }
+    }
+
+    private var cardBackground: Color {
+        Color(uiColor: .secondarySystemBackground)
+    }
+
+    private var cardStroke: Color {
+        Color(uiColor: .tertiarySystemFill)
+    }
+
+    private var primaryTextColor: Color {
+        Color(uiColor: .label)
+    }
+
+    private var secondaryTextColor: Color {
+        Color(uiColor: .secondaryLabel)
     }
 }
 

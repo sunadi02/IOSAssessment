@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LeaderboardView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var store = SessionStore.shared
 
     var body: some View {
@@ -25,11 +26,12 @@ struct LeaderboardView: View {
     private var background: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+                colors: colorScheme == .dark
+                    ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)]
+                    : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-
             RadialGradient(
                 colors: [Color(red: 0.16, green: 0.72, blue: 0.56).opacity(0.18), .clear],
                 center: .topTrailing,
@@ -42,12 +44,12 @@ struct LeaderboardView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("SparkStation Leaderboard")
+            Text("Playzo Leaderboard")
                 .font(.system(size: 32, weight: .black, design: .rounded))
-                .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                .foregroundColor(colorScheme == .dark ? .white : Color(red: 0.12, green: 0.22, blue: 0.43))
             Text("See the top runs across all games.")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.56))
+                .foregroundColor(colorScheme == .dark ? .white : Color(red: 0.12, green: 0.22, blue: 0.43))
         }
         .padding(.top, 22)
     }
@@ -65,10 +67,10 @@ struct LeaderboardView: View {
             }
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .overlay(
             RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+                .stroke(Color(uiColor: .separator), lineWidth: 1)
         )
         .cornerRadius(22)
         .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
@@ -88,10 +90,10 @@ struct LeaderboardView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.playerName)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
+                    .foregroundColor(Color(uiColor: .label))
                 Text(session.mode.rawValue)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(red: 0.41, green: 0.48, blue: 0.60))
+                    .foregroundColor(Color(uiColor: .secondaryLabel))
             }
 
             Spacer()
@@ -99,14 +101,14 @@ struct LeaderboardView: View {
             VStack(alignment: .trailing, spacing: 3) {
                 Text("\(session.score)")
                     .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundColor(Color(red: 0.10, green: 0.16, blue: 0.28))
+                    .foregroundColor(Color(uiColor: .label))
                 Text(session.timestamp, style: .relative)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color(red: 0.50, green: 0.56, blue: 0.66))
+                    .foregroundColor(Color(uiColor: .tertiaryLabel))
             }
         }
         .padding(14)
-        .background(Color(red: 0.98, green: 0.99, blue: 1.0))
+        .background(Color(uiColor: .tertiarySystemBackground))
         .cornerRadius(16)
     }
 
@@ -114,14 +116,14 @@ struct LeaderboardView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.system(size: 15, weight: .bold, design: .rounded))
-                .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
+                .foregroundColor(Color(uiColor: .label))
             Text(subtitle)
                 .font(.system(size: 13))
-                .foregroundColor(Color(red: 0.45, green: 0.52, blue: 0.63))
+                .foregroundColor(Color(uiColor: .secondaryLabel))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color(red: 0.98, green: 0.99, blue: 1.0))
+        .background(Color(uiColor: .tertiarySystemBackground))
         .cornerRadius(16)
     }
 

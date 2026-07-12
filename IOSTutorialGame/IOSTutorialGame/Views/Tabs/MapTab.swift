@@ -4,6 +4,7 @@ import MapKit
 struct MapTab: View {
     @ObservedObject private var store = SessionStore.shared
     @ObservedObject private var location = LocationService.shared
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selected: LocationCluster? = nil
     @State private var cameraPosition: MapCameraPosition = .automatic
     
@@ -38,7 +39,7 @@ struct MapTab: View {
     private var background: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
+                colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -54,12 +55,12 @@ struct MapTab: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Arcade Atlas Map")
+            Text("Playzo Map")
                 .font(.system(size: 32, weight: .black, design: .rounded))
-                .foregroundColor(Color(red: 0.12, green: 0.22, blue: 0.43))
+                .foregroundColor(Color(uiColor: .label))
             Text("Your current location and recent game pins live in one view.")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.56))
+                .foregroundColor(Color(uiColor: .secondaryLabel))
         }
         .padding(.top, 22)
     }
@@ -78,19 +79,19 @@ struct MapTab: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Current location")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color(red: 0.35, green: 0.42, blue: 0.55))
+                    .foregroundColor(Color(uiColor: .secondaryLabel))
                 Text(location.locationDescription)
                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
+                    .foregroundColor(Color(uiColor: .label))
             }
 
             Spacer()
         }
         .padding(18)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
         .overlay(
             RoundedRectangle(cornerRadius: 22)
-                .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+            .stroke(Color(uiColor: .tertiarySystemFill), lineWidth: 1)
         )
         .cornerRadius(22)
         .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
@@ -114,6 +115,25 @@ struct MapTab: View {
                         }
                     }
                     .buttonStyle(.plain)
+                }
+            }
+            
+            ForEach(store.sessions.filter { $0.latitude != 0 }) { session in
+                Annotation(session.mode.rawValue, coordinate: CLLocationCoordinate2D(latitude: session.latitude, longitude: session.longitude)) {
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .fill(pinColor(session.mode))
+                                .frame(width: 20, height: 20)
+                                .shadow(color: pinColor(session.mode).opacity(0.3), radius: 6, x: 0, y: 3)
+                            Image(systemName: session.mode == .tapFrenzy ? "hand.tap.fill" : (session.mode == .lightItUp ? "lightbulb.fill" : "questionmark.bubble.fill"))
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        Text("\(session.score)")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(Color(.label))
+                    }
                 }
             }
 
@@ -151,19 +171,19 @@ struct MapTab: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(s.title)
                             .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(Color(red: 0.12, green: 0.16, blue: 0.26))
+                            .foregroundColor(Color(uiColor: .label))
                         Text(s.summary)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(Color(red: 0.43, green: 0.50, blue: 0.62))
+                            .foregroundColor(Color(uiColor: .secondaryLabel))
                         Text("\(s.sessions.count) sessions")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(red: 0.53, green: 0.58, blue: 0.68))
+                            .foregroundColor(Color(uiColor: .tertiaryLabel))
 
                         VStack(alignment: .leading, spacing: 6) {
                             ForEach(s.gamesSummary, id: \.self) { line in
                                 Text(line)
                                     .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(red: 0.22, green: 0.28, blue: 0.40))
+                                    .foregroundColor(Color(uiColor: .secondaryLabel))
                             }
                         }
                         .padding(.top, 4)
@@ -176,18 +196,18 @@ struct MapTab: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.43, green: 0.50, blue: 0.62))
+                            .foregroundColor(Color(uiColor: .secondaryLabel))
                             .frame(width: 28, height: 28)
-                            .background(Color(red: 0.97, green: 0.98, blue: 1.0))
+                            .background(Color(uiColor: .tertiarySystemFill))
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(18)
-                .background(Color.white)
+                .background(Color(uiColor: .secondarySystemBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: 22)
-                        .stroke(Color(red: 0.80, green: 0.88, blue: 0.98), lineWidth: 1)
+                        .stroke(Color(uiColor: .separator), lineWidth: 1)
                 )
                 .cornerRadius(22)
                 .shadow(color: Color.blue.opacity(0.10), radius: 14, x: 0, y: 8)
