@@ -78,20 +78,7 @@ struct HomeTab: View {
     }
 
     private var background: some View {
-        ZStack {
-            LinearGradient(
-                colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14)] : [Color(uiColor: .systemBackground), Color(uiColor: .secondarySystemBackground)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            RadialGradient(
-                colors: [Color.blue.opacity(0.10), .clear],
-                center: .topTrailing,
-                startRadius: 20,
-                endRadius: 340
-            )
-        }
-        .ignoresSafeArea()
+        PlayzoBackground(colorScheme: colorScheme)
     }
 
     private var header: some View {
@@ -266,6 +253,33 @@ struct HomeTab: View {
 
     private var secondaryTextColor: Color {
         Color(uiColor: .secondaryLabel)
+    }
+}
+
+struct PlayzoBackground: View {
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: colorScheme == .dark ? [
+                    Color(red: 0.04, green: 0.05, blue: 0.08),
+                    Color(red: 0.08, green: 0.09, blue: 0.14)
+                ] : [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .secondarySystemBackground)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            RadialGradient(
+                colors: [Color.blue.opacity(0.10), .clear],
+                center: .topTrailing,
+                startRadius: 20,
+                endRadius: 340
+            )
+        }
+        .ignoresSafeArea()
     }
 }
 

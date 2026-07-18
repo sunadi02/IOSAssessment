@@ -18,6 +18,8 @@ struct QuizRushView: View {
     private var shellBorder: Color { Color(uiColor: .tertiarySystemFill) }
     private var heroPrimary: Color { Color(uiColor: .label) }
     private var heroSecondary: Color { Color(uiColor: .secondaryLabel) }
+    private var panelPrimary: Color { Color(uiColor: .label) }
+    private var panelSecondary: Color { Color(uiColor: .secondaryLabel) }
     
     var body: some View {
         ZStack {
@@ -28,6 +30,8 @@ struct QuizRushView: View {
 
                 ZStack {
                     switch vm.state {
+                    case .ready:
+                        startView
                     case .loading:
                         loadingView
                     case .failed:
@@ -48,7 +52,6 @@ struct QuizRushView: View {
                 .cornerRadius(28)
             }
         }
-        .task { await vm.load() }
         .navigationTitle("Quiz Rush")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
@@ -56,13 +59,84 @@ struct QuizRushView: View {
         .padding(.top, 12)
     }
 
+    var startView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Choose your quiz")
+                        .font(.system(size: 26, weight: .black, design: .rounded))
+                        .foregroundColor(panelPrimary)
+                    Text("Pick a difficulty and category before the questions begin.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(panelSecondary)
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    optionLabel("Difficulty")
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
+                        ForEach(QuizDifficulty.allCases) { difficulty in
+                            quizOptionButton(difficulty.rawValue, selected: vm.selectedDifficulty == difficulty) {
+                                vm.selectedDifficulty = difficulty
+                            }
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    optionLabel("Category")
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
+                        ForEach(QuizCategory.allCases) { category in
+                            quizOptionButton(category.rawValue, selected: vm.selectedCategory == category) {
+                                vm.selectedCategory = category
+                            }
+                        }
+                    }
+                }
+
+                Button {
+                    Task { await vm.load() }
+                } label: {
+                    Text("START QUIZ")
+                        .font(.system(size: 16, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(red: 0.12, green: 0.48, blue: 0.88))
+                        .cornerRadius(14)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+            }
+            .padding(.horizontal, 22)
+        }
+    }
+
+    func optionLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .tracking(1.1)
+            .foregroundColor(panelSecondary)
+    }
+
+    func quizOptionButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(selected ? .white : panelPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(selected ? Color(red: 0.12, green: 0.48, blue: 0.88) : Color(uiColor: .tertiarySystemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(selected ? Color.clear : Color(uiColor: .tertiarySystemFill), lineWidth: 1)
+                )
+                .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+    }
+
     var background: some View {
-        LinearGradient(
-            colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        PlayzoBackground(colorScheme: colorScheme)
     }
 
     var topBar: some View {
@@ -129,7 +203,7 @@ struct QuizRushView: View {
                 .font(.system(size: 48))
             Text(vm.errorMessage)
                 .font(.system(size: 15))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(panelSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             Button("try again") {
@@ -177,11 +251,11 @@ struct QuizRushView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(Color(white: 0.15))
+                            .fill(Color(uiColor: .tertiarySystemFill))
                             .frame(height: 3)
                         Rectangle()
-                            .fill(vm.timeLeft <= 5 ? Color.red : Color.white)
-                            .frame(width: geo.size.width * CGFloat(vm.timeLeft) / 20.0, height: 3)
+                            .fill(vm.timeLeft <= 5 ? Color.red : Color(red: 0.12, green: 0.48, blue: 0.88))
+                            .frame(width: geo.size.width * CGFloat(vm.timeLeft) / 15.0, height: 3)
                             .animation(.linear(duration: 1), value: vm.timeLeft)
                     }
                 }
@@ -195,7 +269,7 @@ struct QuizRushView: View {
                         HStack(spacing: 8) {
                             Text(q.category)
                                 .font(.system(size: 11))
-                                .foregroundColor(Color(white: 0.4))
+                                .foregroundColor(panelSecondary)
                                 .lineLimit(1)
                             Spacer()
                             Text(q.difficulty)
@@ -208,7 +282,7 @@ struct QuizRushView: View {
                         // question
                         Text(q.decodedQuestion)
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(panelPrimary)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
@@ -222,21 +296,22 @@ struct QuizRushView: View {
                         HStack {
                             Text("score  \(vm.score)")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundColor(Color(white: 0.4))
+                                .foregroundColor(panelSecondary)
                             Spacer()
                         }
                         .padding(.horizontal, 24)
                         
                         // answers
                         VStack(spacing: 10) {
-                            ForEach(q.allAnswers.indices, id: \.self) { idx in
-                                let answer = q.allAnswers[idx]
+                            let answers = vm.answerChoices(for: q)
+                            ForEach(answers.indices, id: \.self) { idx in
+                                let answer = answers[idx]
                                 answerButton(answer, correct: q.decodedCorrect)
                             }
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 30)
-                        .animation(nil, value: q.allAnswers)
+                        .animation(nil, value: vm.answerChoices(for: q))
                         .animation(nil, value: vm.selectedAnswer)
                     }
                 }
@@ -306,16 +381,16 @@ struct QuizRushView: View {
             
             Text("round over")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(panelSecondary)
             
             Text("\(vm.score)")
                 .font(.system(size: 96, weight: .black, design: .monospaced))
-                .foregroundColor(.white)
+                .foregroundColor(panelPrimary)
                 .padding(.top, 4)
             
             Text("points")
                 .font(.system(size: 14))
-                .foregroundColor(Color(white: 0.4))
+                .foregroundColor(panelSecondary)
             
             if !isChallengeMode, vm.score > 0 && vm.score >= vm.highScore {
                 Text("🏆 new best!")
@@ -331,16 +406,16 @@ struct QuizRushView: View {
                         .foregroundColor(.orange)
                     Text("best streak")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(panelSecondary)
                 }
                 if !isChallengeMode {
                     VStack(spacing: 3) {
                         Text("\(vm.highScore)")
                             .font(.system(size: 28, weight: .black, design: .monospaced))
-                            .foregroundColor(Color(white: 0.6))
+                            .foregroundColor(panelPrimary)
                         Text("all-time best")
                             .font(.system(size: 11))
-                            .foregroundColor(Color(white: 0.4))
+                            .foregroundColor(panelSecondary)
                     }
                 }
             }
@@ -362,12 +437,12 @@ struct QuizRushView: View {
                 .padding(.bottom, 12)
             }
             Button("play again") {
-                Task { await vm.load() }
+                vm.resetToMenu()
             }
             .font(.system(size: 16, weight: .semibold))
-            .foregroundColor(.black)
+            .foregroundColor(colorScheme == .dark ? .black : .white)
             .frame(width: 140, height: 46)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color.white : Color(red: 0.12, green: 0.48, blue: 0.88))
             .cornerRadius(10)
             .padding(.bottom, 50)
         }

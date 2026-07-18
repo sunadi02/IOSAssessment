@@ -57,7 +57,7 @@ struct LightItUpView: View {
     @State private var cards: [Card] = []
     @State private var score = 0
     @State private var lives = 5
-    @State private var timeLeft = 150
+    @State private var timeLeft = 60
     @State private var gameActive = false
     @State private var gameOver = false
     @State private var level: Level = .l1
@@ -68,7 +68,7 @@ struct LightItUpView: View {
     @State private var streakFeedback = ""
     @State private var showStreakFeedback = false
 
-    private let roundDuration = 150
+    private let roundDuration = 60
 
     init(isChallengeMode: Bool = false) {
         self.isChallengeMode = isChallengeMode
@@ -85,11 +85,11 @@ struct LightItUpView: View {
     }
 
     private var shellBackground: Color {
-        isDarkMode ? Color(red: 0.06, green: 0.07, blue: 0.11) : Color(red: 0.08, green: 0.10, blue: 0.16)
+        isDarkMode ? Color(red: 0.06, green: 0.07, blue: 0.11) : Color(uiColor: .secondarySystemBackground)
     }
 
     private var shellBorder: Color {
-        isDarkMode ? Color.white.opacity(0.12) : Color.white.opacity(0.08)
+        isDarkMode ? Color.white.opacity(0.12) : Color(uiColor: .tertiarySystemFill)
     }
 
     private var heroPrimary: Color {
@@ -101,11 +101,11 @@ struct LightItUpView: View {
     }
 
     private var mutedText: Color {
-        isDarkMode ? Color.white.opacity(0.58) : Color(white: 0.4)
+        isDarkMode ? Color.white.opacity(0.58) : Color(uiColor: .secondaryLabel)
     }
 
     private var panelText: Color {
-        .white
+        Color(uiColor: .label)
     }
 
     private var timeDisplay: String {
@@ -170,12 +170,7 @@ struct LightItUpView: View {
     }
 
     var background: some View {
-        LinearGradient(
-            colors: isDarkMode ? [Color(red: 0.03, green: 0.04, blue: 0.07), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.05, green: 0.06, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        PlayzoBackground(colorScheme: colorScheme)
     }
 
     var topBar: some View {
@@ -240,7 +235,7 @@ struct LightItUpView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(timeDisplay)
                         .font(.system(size: 42, weight: .black, design: .monospaced))
-                        .foregroundColor(timeLeft <= 10 ? .red : (isDarkMode ? .white : Color(white: 0.85)))
+                        .foregroundColor(timeLeft <= 10 ? .red : panelText)
                     Text("time left")
                         .font(.system(size: 12))
                         .foregroundColor(mutedText)
@@ -274,9 +269,9 @@ struct LightItUpView: View {
             if !gameActive {
                 Button("START") { beginGame() }
                     .font(.system(size: 20, weight: .black))
-                    .foregroundColor(.black)
+                    .foregroundColor(isDarkMode ? .black : .white)
                     .frame(width: 140, height: 52)
-                    .background(Color.white)
+                    .background(isDarkMode ? Color.white : Color(red: 0.12, green: 0.48, blue: 0.88))
                     .cornerRadius(12)
             } else {
                 cardGrid
@@ -512,9 +507,9 @@ struct LightItUpView: View {
     func checkLevelUp() {
         let elapsed = roundDuration - timeLeft
         let next: Level
-        if elapsed < 37 { next = .l1 }
-        else if elapsed < 75 { next = .l2 }
-        else if elapsed < 112 { next = .l3 }
+        if elapsed < 15 { next = .l1 }
+        else if elapsed < 30 { next = .l2 }
+        else if elapsed < 45 { next = .l3 }
         else { next = .l4 }
         guard next != level else { return }
         level = next

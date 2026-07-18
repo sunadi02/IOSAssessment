@@ -3,10 +3,44 @@ import SwiftUI
 import Combine
 
 enum QuizState {
+    case ready
     case loading
     case loaded
     case failed
     case finished
+}
+
+enum QuizDifficulty: String, CaseIterable, Identifiable {
+    case any = "Any"
+    case easy = "Easy"
+    case medium = "Medium"
+    case hard = "Hard"
+
+    var id: String { rawValue }
+
+    var queryValue: String? {
+        self == .any ? nil : rawValue.lowercased()
+    }
+}
+
+enum QuizCategory: String, CaseIterable, Identifiable {
+    case any = "Any"
+    case general = "General"
+    case science = "Science"
+    case history = "History"
+    case sports = "Sports"
+    case geography = "Geography"
+
+    var id: Int? {
+        switch self {
+        case .any: return nil
+        case .general: return 9
+        case .science: return 17
+        case .history: return 23
+        case .sports: return 21
+        case .geography: return 22
+        }
+    }
 }
 
 @MainActor
@@ -21,11 +55,14 @@ class QuizRushViewModel: ObservableObject {
     @Published var score = 0
     @Published var streak = 0
     @Published var bestStreak = 0
-    @Published var state: QuizState = .loading
+    @Published var state: QuizState = .ready
     @Published var selectedAnswer: String? = nil
     @Published var timeLeft = 15
     @Published var errorMessage = ""
+    @Published var selectedDifficulty: QuizDifficulty = .any
+    @Published var selectedCategory: QuizCategory = .any
     
+    private var answerChoicesByQuestionID: [UUID: [String]] = [:]
     private var timer: Timer?
 
     init(persistResults: Bool = true) {
@@ -48,15 +85,34 @@ class QuizRushViewModel: ObservableObject {
         score = 0
         streak = 0
         bestStreak = 0
+        answerChoicesByQuestionID = [:]
         
         do {
-            questions = try await TriviaService.fetchQuestions()
+            questions = try await TriviaService.fetchQuestions(difficulty: selectedDifficulty, category: selectedCategory)
+            answerChoicesByQuestionID = Dictionary(
+                uniqueKeysWithValues: questions.map { question in
+                    (question.id, (question.incorrectAnswers + [question.correctAnswer]).shuffled())
+                }
+            )
             state = .loaded
             startTimer()
         } catch {
             errorMessage = "couldn't load questions. check your connection."
             state = .failed
         }
+    }
+
+    func resetToMenu() {
+        timer?.invalidate()
+        state = .ready
+        selectedAnswer = nil
+        currentIndex = 0
+        score = 0
+        streak = 0
+        bestStreak = 0
+        timeLeft = 15
+        questions = []
+        answerChoicesByQuestionID = [:]
     }
     
     func answer(_ choice: String) {
@@ -113,6 +169,10 @@ class QuizRushViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func answerChoices(for question: TriviaQuestion) -> [String] {
+        answerChoicesByQuestionID[question.id] ?? (question.incorrectAnswers + [question.correctAnswer])
     }
     
     func difficultyColor(_ d: String) -> Color {

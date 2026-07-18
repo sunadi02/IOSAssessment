@@ -18,10 +18,6 @@ struct TriviaQuestion: Codable, Identifiable {
         case incorrectAnswers = "incorrect_answers"
     }
     
-    var allAnswers: [String] {
-        (incorrectAnswers + [correctAnswer]).shuffled()
-    }
-    
     // use these everywhere in the view instead of the raw properties
     var decodedQuestion: String { question.htmlDecoded }
     var decodedCorrect: String { correctAnswer.htmlDecoded }

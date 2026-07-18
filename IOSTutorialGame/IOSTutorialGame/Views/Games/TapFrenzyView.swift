@@ -37,6 +37,14 @@ struct TapFrenzyView: View {
         Color(uiColor: .secondaryLabel)
     }
 
+    private var panelPrimary: Color {
+        Color(uiColor: .label)
+    }
+
+    private var panelSecondary: Color {
+        Color(uiColor: .secondaryLabel)
+    }
+
     init(isChallengeMode: Bool = false) {
         self.isChallengeMode = isChallengeMode
     }
@@ -78,12 +86,7 @@ struct TapFrenzyView: View {
     }
 
     var background: some View {
-        LinearGradient(
-            colors: colorScheme == .dark ? [Color(red: 0.04, green: 0.05, blue: 0.08), Color(red: 0.08, green: 0.09, blue: 0.14), Color(red: 0.06, green: 0.07, blue: 0.10)] : [Color(red: 0.98, green: 0.99, blue: 1.0), Color(red: 0.95, green: 0.97, blue: 1.0), Color(red: 0.98, green: 0.99, blue: 1.0)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        PlayzoBackground(colorScheme: colorScheme)
     }
 
     var topBar: some View {
@@ -176,7 +179,7 @@ struct TapFrenzyView: View {
             if !isChallengeMode {
                 Text("best: \(highScore)")
                     .font(.footnote)
-                    .foregroundColor(Color(white: 0.35))
+                    .foregroundColor(panelSecondary)
             }
         }
         .padding()
@@ -242,10 +245,10 @@ struct TapFrenzyView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 50, weight: .bold, design: .monospaced))
-                .foregroundColor(highlight ? .red : .white)
+                .foregroundColor(highlight ? .red : panelPrimary)
             Text(label)
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(panelSecondary)
                 .tracking(2)
         }
     }
@@ -313,4 +316,3 @@ struct TapFrenzyView: View {
         }
     }
 }
-

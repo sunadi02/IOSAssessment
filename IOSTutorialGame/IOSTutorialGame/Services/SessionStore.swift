@@ -32,15 +32,17 @@ class SessionStore: ObservableObject {
         sessions.filter { $0.mode == mode }.map { $0.score }.max() ?? 0
     }
 
-    func leaderboard(limit: Int = 10) -> [GameSession] {
-        sessions.sorted {
-            if $0.score == $1.score {
-                return $0.timestamp > $1.timestamp
+    func leaderboard(for mode: GameMode, limit: Int = 10) -> [GameSession] {
+        sessions
+            .filter { $0.mode == mode }
+            .sorted {
+                if $0.score == $1.score {
+                    return $0.timestamp > $1.timestamp
+                }
+                return $0.score > $1.score
             }
-            return $0.score > $1.score
-        }
-        .prefix(limit)
-        .map { $0 }
+            .prefix(limit)
+            .map { $0 }
     }
     
     func recent(_ count: Int = 10) -> [GameSession] {
